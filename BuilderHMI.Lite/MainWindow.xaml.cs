@@ -772,39 +772,6 @@ namespace BuilderHMI.Lite
             return sb.ToString();
         }
 
-        public string ToXaml()
-        {
-            var sortedChildren = new SortedList<int, IHmiControl>(gridCanvas.Children.Count);
-            foreach (object child in gridCanvas.Children)
-            {
-                if (child is IHmiControl control)
-                    sortedChildren[Panel.GetZIndex(control.fe)] = control;
-            }
-
-            var sb = new StringBuilder();
-            sb.AppendLine("<Window x:Class=\"__PROJECT_NAME__.MainWindow\"");
-            sb.AppendLine("    xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"");
-            sb.AppendLine("    xmlns:x=\"http://schemas.microsoft.com/winfx/2006/xaml\"");
-            sb.AppendLine("    xmlns:local=\"clr-namespace:__PROJECT_NAME__\"");
-            sb.AppendLine("    Title=\"__WINDOW_TITLE__\" Width=\"800\" Height=\"600\" MinWidth=\"400\" MinHeight=\"300\"");
-            sb.AppendLine("    WindowStartupLocation=\"CenterScreen\" Style=\"{DynamicResource WindowStyle}\">\r\n");
-            sb.AppendLine("    <Window.Resources>");
-            sb.AppendLine("        <ResourceDictionary>");
-            sb.AppendLine("            <ResourceDictionary.MergedDictionaries>");
-            sb.AppendLine("                <ResourceDictionary Source=\"Styles.xaml\" />");
-            sb.AppendLine("            </ResourceDictionary.MergedDictionaries>");
-            sb.AppendLine("        </ResourceDictionary>");
-            sb.AppendLine("    </Window.Resources>\r\n");
-            sb.AppendLine("    <Grid>");
-            foreach (IHmiControl child in sortedChildren.Values)
-                sb.AppendLine(child.ToXaml(2, true));
-            sb.AppendLine("    </Grid>");
-            sb.Append("</Window>");
-            sb.Replace("<Hmi", "<local:Hmi");
-            sb.Replace("</Hmi", "</local:Hmi");
-            return sb.ToString();
-        }
-
         public void AppendLocationXaml(IHmiControl control, StringBuilder sb)
         {
             if (control.fe.HorizontalAlignment != HorizontalAlignment.Stretch)
@@ -952,9 +919,21 @@ namespace BuilderHMI.Lite
                 CopyProjectFile("App.xaml.cs");
                 CopyProjectFile("MainWindow.xaml.cs");
 
+                // Generate xaml for all controls in Z-order:
+                var sortedChildren = new SortedList<int, IHmiControl>(gridCanvas.Children.Count);
+                foreach (object child in gridCanvas.Children)
+                {
+                    if (child is IHmiControl control)
+                        sortedChildren[Panel.GetZIndex(control.fe)] = control;
+                }
+                var sb = new StringBuilder();
+                foreach (IHmiControl child in sortedChildren.Values)
+                    sb.AppendLine(child.ToXaml(2, true));
+
                 // Generate MainWindow.xaml, specifying the project name and window title:
+                path = Path.Combine(templateFolder, "MainWindow.xaml");
+                text = File.ReadAllText(path).Replace("__PROJECT_NAME__", projectName).Replace("__WINDOW_TITLE__", title).Replace("__CONTROLS__", sb.ToString().Trim());
                 path = Path.Combine(projectFolder, "MainWindow.xaml");
-                text = ToXaml().Replace("__PROJECT_NAME__", projectName).Replace("__WINDOW_TITLE__", title);
                 File.WriteAllText(path, text);
 
                 // Copy Images and add as project resources:

@@ -10,6 +10,8 @@ using System.Windows.Shapes;
 
 namespace BuilderHMI.Lite
 {
+    // Simple controls do not respond to user input: TextBlock, GroupBox, Border and Image
+
     public class HmiTextBlock : TextBlock, IHmiControl
     {
         public HmiTextBlock()

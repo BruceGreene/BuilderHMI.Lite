@@ -58,14 +58,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <None Include="Visual Studio\Template\MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Visual Studio\Template\App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Visual Studio\Template\AssemblyInfo.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Visual Studio\Template\MainWindow.xaml.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Page Include="Controls\HmiButtonProperties.xaml">
@@ -128,6 +129,10 @@
       <SubType>Code</SubType>
     </Compile>
     <None Include="Visual Studio\Template\App.xaml">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Visual Studio\Template\MainWindow.xaml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
