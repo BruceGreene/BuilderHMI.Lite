@@ -1,4 +1,4 @@
-### BuilderHMI.Lite by Bruce Greene
+### BuilderHMI.Lite - Simple Drag-and-Drop WPF Layout
 
 ![Alt text](Banner.jpg "BuilderHMI.Lite")
 
@@ -9,6 +9,9 @@ https://www.codeproject.com/Articles/5283954/BuilderHMI-Lite-Simple-Drag-and-Dro
 https://youtu.be/xgmCmU76PFQ
 
 ### Features
-* Add controls and specify their Alignment.
-* Left-drag to Move controls, Right-drag to Size.
-* Generate Visual Studio project and Build!
+* WPF controls: Button, TextBox, TextBlock, GroupBox, Border and Image
+* Add controls then Left-drag to Move and Right-drag to Size
+* Left/Right/Center/Stretch horizontal alignment and Top/Bottom/Center/Stretch vertical
+* Editing functions: Cut/Copy/Paste/Delete, ToFront and ToBack
+* WPF Style support for the main window and all controls
+* Visual Studio WPF/C# project generation from a template
