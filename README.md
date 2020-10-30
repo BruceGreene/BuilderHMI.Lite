@@ -3,9 +3,9 @@
 ![Alt text](Banner.jpg "BuilderHMI.Lite")
 
 ### CodeProject Article
-https://www.codeproject.com/Articles/xxxx
+https://www.codeproject.com/Articles/5283954/BuilderHMI-Lite-Simple-Drag-and-Drop-WPF-Layout
 
-### YouTube Video
+### YouTube Introductory Video
 https://youtu.be/xgmCmU76PFQ
 
 ### Features
