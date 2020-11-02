@@ -1,5 +1,10 @@
 ### BuilderHMI.Lite - Simple Drag-and-Drop WPF Layout
 
+WPF design as quick and intuitive as WinForms!
+Add controls and specify their alignment. Left-drag to move and right-drag to size.
+Generate a complete WPF/C# Visual Studio project, build and run!
+Add your own MVVM bindings, event handlers, etc to complete the app.
+
 ![Alt text](Banner.jpg "BuilderHMI.Lite")
 
 ### CodeProject Article
