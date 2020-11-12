@@ -1,0 +1,18 @@
+﻿<Window x:Class="__PROJECT_NAME__.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="__WINDOW_TITLE__" Width="800" Height="600" MinWidth="400" MinHeight="300"
+    WindowStartupLocation="CenterScreen" Style="{DynamicResource WindowStyle}">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        __CONTROLS__
+    </Grid>
+</Window>

@@ -1,4 +1,4 @@
-﻿<Window x:Class="BuilderHMI.Lite.Designer"
+﻿<Window x:Class="BuilderHMI.Lite.Core.Designer"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="Layout Designer" WindowStyle="None" ResizeMode="NoResize" SizeToContent="Height" Width="300" FontSize="16"

@@ -1,0 +1,121 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Visual Studio\TemplateCore\App.xaml.cs" />
+    <Compile Remove="Visual Studio\TemplateCore\AssemblyInfo.cs" />
+    <Compile Remove="Visual Studio\TemplateCore\MainWindow.xaml.cs" />
+    <Compile Remove="Visual Studio\Template\App.xaml.cs" />
+    <Compile Remove="Visual Studio\Template\AssemblyInfo.cs" />
+    <Compile Remove="Visual Studio\Template\MainWindow.xaml.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Images\control_border.png" />
+    <None Remove="Images\control_button.png" />
+    <None Remove="Images\control_group.png" />
+    <None Remove="Images\control_image.png" />
+    <None Remove="Images\control_text_block.png" />
+    <None Remove="Images\control_text_box.png" />
+    <None Remove="Images\copy.png" />
+    <None Remove="Images\cut.png" />
+    <None Remove="Images\delete.png" />
+    <None Remove="Images\help.png" />
+    <None Remove="Images\image.png" />
+    <None Remove="Images\open16.png" />
+    <None Remove="Images\paste.png" />
+    <None Remove="Images\to_back.png" />
+    <None Remove="Images\to_front.png" />
+    <None Remove="Images\VS.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Remove="Visual Studio\TemplateCore\App.xaml" />
+    <Page Remove="Visual Studio\TemplateCore\MainWindow.xaml" />
+    <Page Remove="Visual Studio\Template\App.xaml" />
+    <Page Remove="Visual Studio\Template\MainWindow.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controls\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Visual Studio\TemplateCore\App.xaml">
+      <Generator></Generator>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Visual Studio\TemplateCore\App.xaml.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Visual Studio\TemplateCore\AssemblyInfo.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Visual Studio\TemplateCore\MainWindow.xaml">
+      <Generator></Generator>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Visual Studio\TemplateCore\MainWindow.xaml.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Visual Studio\TemplateCore\Template.csproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Visual Studio\TemplateCore\Template.csproj.user">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Visual Studio\Template\App.xaml">
+      <Generator></Generator>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Visual Studio\Template\App.xaml.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Visual Studio\Template\AssemblyInfo.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Visual Studio\Template\MainWindow.xaml">
+      <Generator></Generator>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Visual Studio\Template\MainWindow.xaml.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Visual Studio\Template\Template.csproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\control_border.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\control_button.png" />
+    <Resource Include="Images\control_group.png" />
+    <Resource Include="Images\control_image.png" />
+    <Resource Include="Images\control_text_block.png" />
+    <Resource Include="Images\control_text_box.png" />
+    <Resource Include="Images\copy.png" />
+    <Resource Include="Images\cut.png" />
+    <Resource Include="Images\delete.png" />
+    <Resource Include="Images\help.png" />
+    <Resource Include="Images\image.png" />
+    <Resource Include="Images\open16.png" />
+    <Resource Include="Images\paste.png" />
+    <Resource Include="Images\to_back.png" />
+    <Resource Include="Images\to_front.png" />
+    <Resource Include="Images\VS.png" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy &quot;$(ProjectDir)App.config&quot; &quot;$(TargetDir)\Visual Studio\Template&quot; /D /y&#xD;&#xA;xcopy &quot;$(ProjectDir)Styles.xaml&quot; &quot;$(TargetDir)\Visual Studio\Template&quot; /D /y" />
+  </Target>
+
+</Project>

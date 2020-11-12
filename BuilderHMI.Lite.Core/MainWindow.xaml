@@ -1,0 +1,16 @@
+﻿<Window x:Class="BuilderHMI.Lite.Core.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="BuilderHMI Lite" Width="800" Height="600" MinWidth="400" MinHeight="300"
+    WindowStartupLocation="CenterScreen" Style="{DynamicResource WindowStyle}" KeyDown="OnKeyDown" Loaded="Window_Loaded">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Name="gridCanvas" />
+</Window>

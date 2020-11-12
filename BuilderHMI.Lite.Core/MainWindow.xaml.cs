@@ -10,7 +10,7 @@ using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
 
-namespace BuilderHMI.Lite
+namespace BuilderHMI.Lite.Core
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

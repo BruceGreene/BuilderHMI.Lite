@@ -4,7 +4,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace BuilderHMI.Lite
+namespace BuilderHMI.Lite.Core
 {
     /// <summary>
     /// Interaction logic for Designer.xaml

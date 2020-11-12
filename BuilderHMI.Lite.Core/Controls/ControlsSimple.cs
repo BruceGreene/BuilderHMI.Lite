@@ -8,7 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace BuilderHMI.Lite
+namespace BuilderHMI.Lite.Core
 {
     // Simple controls do not respond to user input: TextBlock, GroupBox, Border and Image
 

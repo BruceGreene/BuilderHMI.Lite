@@ -1,0 +1,66 @@
+﻿<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Sky Blue -->
+    <!-- machine tree and object list -->
+    <SolidColorBrush x:Key="BackgroundBrush1" Color="White"/>
+    <SolidColorBrush x:Key="ForeignBrush" Color="LightYellow"/>
+    <SolidColorBrush x:Key="TextBrush1" Color="Black"/>
+
+    <!-- title bars and member pages -->
+    <SolidColorBrush x:Key="BackgroundBrush2" Color="#FFDCE7F4"/>
+    <SolidColorBrush x:Key="TextBrush2" Color="#FF183E7F"/>
+    <SolidColorBrush x:Key="MutedTextBrush" Color="DimGray"/>
+
+    <!-- upper control bar -->
+    <SolidColorBrush x:Key="BackgroundBrush3" Color="#FF8DAED9"/>
+    <SolidColorBrush x:Key="TextBrush3" Color="White"/>
+
+    <!-- selected items -->
+    <SolidColorBrush x:Key="HighlightBrush" Color="#FF3399FF"/>
+    <SolidColorBrush x:Key="HighlightTextBrush" Color="White"/>
+
+    <SolidColorBrush x:Key="SplitterBrush" Color="#FF828277"/>
+
+    <FontFamily x:Key="DefaultFont">Segoe UI</FontFamily>
+
+    <Style TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource DefaultFont}" />
+    </Style>
+
+    <Style TargetType="TextBox">
+        <Setter Property="FontFamily" Value="{DynamicResource DefaultFont}" />
+    </Style>
+
+    <Style TargetType="GroupBox">
+        <Setter Property="FontFamily" Value="{DynamicResource DefaultFont}" />
+    </Style>
+
+    <Style x:Key="FlatButtonBaseStyle" TargetType="ButtonBase">
+        <Setter Property="Focusable" Value="false" />
+        <Setter Property="SnapsToDevicePixels" Value="true" />
+        <Setter Property="OverridesDefaultStyle" Value="true" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonBase">
+                    <Border Name="border" BorderThickness="1" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                        <ContentPresenter Margin="2" HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="true">
+                            <Setter TargetName="border" Property="BorderBrush" Value="#FF3399FF" />
+                            <Setter TargetName="border" Property="Background" Value="#FFC2E0FF" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="true">
+                            <Setter TargetName="border" Property="Background" Value="#FF99CCFF" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="false">
+                            <Setter Property="Opacity" Value="0.3" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>
