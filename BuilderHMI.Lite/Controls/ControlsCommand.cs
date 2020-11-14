@@ -4,11 +4,12 @@ using System.Net;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media.Imaging;
 
 namespace BuilderHMI.Lite
 {
-    // Command controls respond to user inputs: Button and TextBox
+    // Command controls respond to user inputs: Button, TextBox, Slider, Hyperlink
 
     public class HmiButton : Button, IHmiControl
     {
@@ -117,7 +118,7 @@ namespace BuilderHMI.Lite
 
             if (vs)
             {
-                sb.AppendFormat("<Button Name=\"{0}\" Style=\"{{DynamicResource ButtonStyle}}\"", Name);
+                sb.AppendFormat("<Button Style=\"{{DynamicResource ButtonStyle}}\" Name=\"{0}\"", Name);
                 if (text.Length > 0 && ImageFile.Length > 0)
                 {
                     OwnerPage.AppendLocationXaml(this, sb);
@@ -187,6 +188,90 @@ namespace BuilderHMI.Lite
             sb.AppendFormat(" Name=\"{0}\"", Name);
             OwnerPage.AppendLocationXaml(this, sb);
             sb.Append(" />");
+            return sb.ToString();
+        }
+    }
+
+    public class HmiSlider : Slider, IHmiControl
+    {
+        public HmiSlider()
+        {
+            Focusable = false;
+            SetResourceReference(StyleProperty, "SliderStyle");
+            SizeChanged += OnSizeChanged;
+        }
+
+        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            Orientation = (Height > Width) ? Orientation.Vertical : Orientation.Horizontal;
+        }
+
+        public FrameworkElement fe { get { return this; } }
+        public MainWindow OwnerPage { get; set; }
+        public string NamePrefix { get { return "slider"; } }
+        public Size InitialSize { get { return new Size(100, 30); } }
+        public ECtrlFlags Flags { get { return ECtrlFlags.Resize; } }
+
+        private static HmiRangeBaseProperties properties = new HmiRangeBaseProperties("Slider Properties");
+        public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
+
+        public string ToXaml(int indentLevel, bool vs = false)
+        {
+            var sb = new StringBuilder();
+            for (int i = 0; i < indentLevel; i++) sb.Append("    ");
+            sb.Append(vs ? "<Slider Style=\"{DynamicResource SliderStyle}\"" : "<HmiSlider");
+            sb.AppendFormat(" Name=\"{0}\" Minimum=\"{1}\" Maximum=\"{2}\"", Name, Minimum, Maximum);
+            if (vs && Height > Width)
+                sb.Append(" Orientation=\"Vertical\"");
+            OwnerPage.AppendLocationXaml(this, sb);
+            sb.Append(" />");
+            return sb.ToString();
+        }
+    }
+
+    public class HmiHyperlink : TextBlock, IHmiControl
+    {
+        public HmiHyperlink()
+        {
+            Text = "HYPERLINK";
+            SetResourceReference(StyleProperty, "HyperlinkStyle");
+        }
+
+        public FrameworkElement fe { get { return this; } }
+        public MainWindow OwnerPage { get; set; }
+        public string NamePrefix { get { return "link"; } }
+        public Size InitialSize { get { return new Size(double.NaN, double.NaN); } }
+        public ECtrlFlags Flags { get { return ECtrlFlags.None; } }
+
+        private static HmiTextBlockProperties properties = new HmiTextBlockProperties();
+        public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
+
+        public string ToXaml(int indentLevel, bool vs = false)
+        {
+            var sb = new StringBuilder();
+            for (int i = 0; i < indentLevel; i++) sb.Append("    ");
+
+            if (vs)
+            {
+                sb.AppendFormat("<TextBlock Style=\"{{DynamicResource HyperlinkStyle}}\" Name=\"{0}\"", Name);
+                OwnerPage.AppendLocationXaml(this, sb);
+                sb.AppendLine(">");
+                for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
+                sb.AppendLine("<Hyperlink>");
+                for (int i = 0; i < indentLevel + 2; i++) sb.Append("    ");
+                sb.AppendLine(WebUtility.HtmlEncode(Text).Replace("\n", "&#10;"));
+                for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
+                sb.AppendLine("</Hyperlink>");
+                for (int i = 0; i < indentLevel; i++) sb.Append("    ");
+                sb.Append("</TextBlock>");
+            }
+            else
+            {
+                sb.AppendFormat("<HmiHyperlink Name=\"{0}\" Text=\"{1}\"", Name, WebUtility.HtmlEncode(Text).Replace("\n", "&#10;"));
+                OwnerPage.AppendLocationXaml(this, sb);
+                sb.Append(" />");
+            }
+
             return sb.ToString();
         }
     }

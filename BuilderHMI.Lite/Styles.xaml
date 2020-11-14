@@ -8,7 +8,9 @@
     <SolidColorBrush x:Key="BorderBackgroundBrush" Color="#FFC1D9F1"/>
     <SolidColorBrush x:Key="GroupBoxBorderBrush" Color="#FF7592B5"/>
     <SolidColorBrush x:Key="TextBrush" Color="#FF30509F"/>
+    <SolidColorBrush x:Key="HyperlinkBrush" Color="#FF0066CC"/>
     <SolidColorBrush x:Key="SelectedBrush" Color="Red"/>
+    <SolidColorBrush x:Key="HighlightBrush" Color="#FFFAAC5E"/>
     <SolidColorBrush x:Key="HighlightEdgeBrush" Color="#FFFDEFAD"/>
 
     <LinearGradientBrush x:Key="ButtonBrush" StartPoint="0,0" EndPoint="0,1">
@@ -37,6 +39,31 @@
         <Setter Property="MinHeight" Value="10" />
     </Style>
 
+    <Style x:Key="ProgressBarStyle" TargetType="ProgressBar">
+        <Setter Property="MinWidth" Value="10" />
+        <Setter Property="MinHeight" Value="10" />
+        <Setter Property="Foreground" Value="{DynamicResource HighlightBrush}" />
+        <Setter Property="Background" Value="{DynamicResource PageBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource GroupBoxBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1.5" />
+    </Style>
+
+    <Style x:Key="SliderStyle" TargetType="Slider">
+        <Setter Property="MinWidth" Value="10" />
+        <Setter Property="MinHeight" Value="10" />
+        <Setter Property="SmallChange" Value="1" />
+        <Setter Property="LargeChange" Value="1" />
+        <Setter Property="TickPlacement" Value="BottomRight" />
+        <Setter Property="TickFrequency" Value="1" />
+        <Setter Property="IsSnapToTickEnabled" Value="True" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+    </Style>
+
+    <Style x:Key="HyperlinkStyle" TargetType="TextBlock">
+        <Setter Property="Padding" Value="4,2" />
+        <Setter Property="Foreground" Value="{DynamicResource HyperlinkBrush}" />
+    </Style>
+
     <Style x:Key="TextBlockStyle" TargetType="TextBlock">
         <Setter Property="Padding" Value="4,2" />
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
@@ -48,6 +75,85 @@
         <Setter Property="BorderBrush" Value="{DynamicResource TextBrush}" />
         <Setter Property="MinWidth" Value="35" />
         <Setter Property="Padding" Value="2"/>
+    </Style>
+
+    <Style x:Key="ListBoxStyle" TargetType="ListBox">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource BorderBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource TextBrush}" />
+        <Setter Property="MinWidth" Value="10" />
+        <Setter Property="MinHeight" Value="10" />
+        <Setter Property="Padding" Value="2"/>
+    </Style>
+
+    <Style x:Key="ListBoxItemStyle" TargetType="ListBoxItem">
+        <Setter Property="SnapsToDevicePixels" Value="true" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="OverridesDefaultStyle" Value="true" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="border" Padding="4,2" SnapsToDevicePixels="true" Background="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="SelectionStates">
+                                <VisualState x:Name="Unselected" />
+                                <VisualState x:Name="Selected">
+                                    <Storyboard>
+                                        <ColorAnimation Duration="0" To="{Binding Path=Color, Source={StaticResource HighlightBrush}}" Storyboard.TargetName="border" 
+                                            Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)"/>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <ContentPresenter />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ComboBoxStyle" TargetType="ComboBox">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource BorderBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource TextBrush}" />
+        <Setter Property="MinWidth" Value="35" />
+        <Setter Property="Padding" Value="4"/>
+    </Style>
+
+    <Style x:Key="ComboBoxItemStyle" TargetType="ComboBoxItem">
+        <Setter Property="SnapsToDevicePixels" Value="true" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="OverridesDefaultStyle" Value="true" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ComboBoxItem}">
+                    <Border x:Name="border" Padding="4,2" SnapsToDevicePixels="true" Background="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="SelectionStates">
+                                <VisualState x:Name="Unselected" />
+                                <VisualState x:Name="Selected">
+                                    <Storyboard>
+                                        <ColorAnimation Duration="0" To="{Binding Path=Color, Source={StaticResource HighlightBrush}}" Storyboard.TargetName="border" 
+                                            Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)"/>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <ContentPresenter />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="RadioButtonStyle" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Margin" Value="0,4"/>
+    </Style>
+
+    <Style x:Key="CheckBoxStyle" TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Margin" Value="0,4"/>
     </Style>
 
     <Style x:Key="ButtonStyle" TargetType="Button">

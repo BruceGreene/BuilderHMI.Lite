@@ -46,6 +46,13 @@ namespace BuilderHMI.Lite
                             tbText.SetText(glabel.Replace('\n', '|'));
                         control = group;
                     }
+                    else if (value is HmiHyperlink link)
+                    {
+                        tbName.SetText(value.Name);
+                        tbTitle.Text = "Hyperlink Properties";
+                        tbText.SetText(link.Text.Replace('\n', '|'));
+                        control = link;
+                    }
                 }
             }
         }
@@ -62,6 +69,8 @@ namespace BuilderHMI.Lite
                 tb.Text = tbText.Text.Replace('|', '\n');
             else if (control is HmiGroupBox group)
                 group.Header = tbText.Text.Replace('|', '\n');
+            else if (control is HmiHyperlink link)
+                link.Text = tbText.Text.Replace('|', '\n');
         }
     }
 }

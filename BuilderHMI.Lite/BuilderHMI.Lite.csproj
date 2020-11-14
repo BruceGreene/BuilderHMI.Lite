@@ -91,6 +91,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Controls\HmiListBoxProperties.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\HmiRangeBaseProperties.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Controls\HmiTextBlockProperties.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -120,12 +128,19 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Controls\ControlsCommand.cs" />
+    <Compile Include="Controls\ControlsList.cs" />
     <Compile Include="Controls\ControlsSimple.cs" />
     <Compile Include="Controls\HmiButtonProperties.xaml.cs">
       <DependentUpon>HmiButtonProperties.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\HmiImageProperties.xaml.cs">
       <DependentUpon>HmiImageProperties.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\HmiListBoxProperties.xaml.cs">
+      <DependentUpon>HmiListBoxProperties.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\HmiRangeBaseProperties.xaml.cs">
+      <DependentUpon>HmiRangeBaseProperties.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\HmiTextBlockProperties.xaml.cs">
       <DependentUpon>HmiTextBlockProperties.xaml</DependentUpon>
@@ -214,6 +229,17 @@
     <None Include="Visual Studio\TemplateCore\Template.csproj.user">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\control_check.png" />
+    <Resource Include="Images\control_dropdown.png" />
+    <Resource Include="Images\control_listbox.png" />
+    <Resource Include="Images\control_radio.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\control_link.png" />
+    <Resource Include="Images\control_progress.png" />
+    <Resource Include="Images\control_slider.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

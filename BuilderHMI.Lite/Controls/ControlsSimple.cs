@@ -10,7 +10,7 @@ using System.Windows.Shapes;
 
 namespace BuilderHMI.Lite
 {
-    // Simple controls do not respond to user input: TextBlock, GroupBox, Border and Image
+    // Simple controls do not respond to user input: TextBlock, GroupBox, Border, Image, ProgressBar
 
     public class HmiTextBlock : TextBlock, IHmiControl
     {
@@ -165,7 +165,19 @@ namespace BuilderHMI.Lite
 
         private static void OnStretchChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            (d as HmiImage).image.Stretch = (Stretch)e.NewValue;
+            var image = (HmiImage)d;
+            image.image.Stretch = (Stretch)e.NewValue;
+
+            if (image.image.Stretch == Stretch.Fill || image.image.Stretch == Stretch.UniformToFill)
+            {
+                image.image.HorizontalAlignment = HorizontalAlignment.Stretch;
+                image.image.VerticalAlignment = VerticalAlignment.Stretch;
+            }
+            else
+            {
+                image.image.HorizontalAlignment = HorizontalAlignment.Left;
+                image.image.VerticalAlignment = VerticalAlignment.Top;
+            }
         }
 
         public FrameworkElement fe { get { return this; } }
@@ -184,6 +196,43 @@ namespace BuilderHMI.Lite
             sb.Append(vs ? "<Image" : "<HmiImage");
             sb.AppendFormat(" Name=\"{0}\" Stretch=\"{1}\"", Name, Stretch);
             if (ImageFile.Length > 0) sb.AppendFormat(vs ? " Source=\"Images/{0}\"" : " ImageFile=\"{0}\"", ImageFile);
+            OwnerPage.AppendLocationXaml(this, sb);
+            sb.Append(" />");
+            return sb.ToString();
+        }
+    }
+
+    public class HmiProgressBar : ProgressBar, IHmiControl
+    {
+        public HmiProgressBar()
+        {
+            Value = Maximum / 4;
+            SetResourceReference(StyleProperty, "ProgressBarStyle");
+            SizeChanged += OnSizeChanged;
+        }
+
+        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            Orientation = (Height > Width) ? Orientation.Vertical : Orientation.Horizontal;
+        }
+
+        public FrameworkElement fe { get { return this; } }
+        public MainWindow OwnerPage { get; set; }
+        public string NamePrefix { get { return "progress"; } }
+        public Size InitialSize { get { return new Size(100, 30); } }
+        public ECtrlFlags Flags { get { return ECtrlFlags.Resize; } }
+
+        private static HmiRangeBaseProperties properties = new HmiRangeBaseProperties("Progress Bar Properties");
+        public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
+
+        public string ToXaml(int indentLevel, bool vs = false)
+        {
+            var sb = new StringBuilder();
+            for (int i = 0; i < indentLevel; i++) sb.Append("    ");
+            sb.Append(vs ? "<ProgressBar Style=\"{DynamicResource ProgressBarStyle}\"" : "<HmiProgressBar");
+            sb.AppendFormat(" Name=\"{0}\" Minimum=\"{1}\" Maximum=\"{2}\"", Name, Minimum, Maximum);
+            if (vs && Height > Width)
+                sb.Append(" Orientation=\"Vertical\"");
             OwnerPage.AppendLocationXaml(this, sb);
             sb.Append(" />");
             return sb.ToString();

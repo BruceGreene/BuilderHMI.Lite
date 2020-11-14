@@ -29,6 +29,11 @@ namespace BuilderHMI.Lite
         string ToXaml(int indentLevel, bool vs = false);
     }
 
+    public interface IHmiListControl : IHmiControl
+    {
+        string Elements { get; set; }
+    }
+
     public interface IHmiPropertyPage
     {
         void Reset();
@@ -39,6 +44,12 @@ namespace BuilderHMI.Lite
         public static void SetText(this TextBox tb, string text)
         {
             tb.Text = string.IsNullOrEmpty(text) ? "" : text;
+            tb.SelectAll();
+        }
+
+        public static void SetText(this TextBox tb, double value)
+        {
+            tb.Text = value.ToString();
             tb.SelectAll();
         }
 

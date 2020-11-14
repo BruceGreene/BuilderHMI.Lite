@@ -1,7 +1,7 @@
 ﻿<Window x:Class="BuilderHMI.Lite.Designer"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="Layout Designer" WindowStyle="None" ResizeMode="NoResize" SizeToContent="Height" Width="300" FontSize="16"
+    Title="Layout Designer" WindowStyle="None" ResizeMode="NoResize" SizeToContent="Height" Width="320" FontSize="16"
     ShowInTaskbar="False" ShowActivated="False" WindowStartupLocation="CenterOwner" Background="Transparent" AllowsTransparency="True"
     ButtonBase.Click="ButtonBase_Click" KeyDown="OnKeyDown" MouseLeftButtonDown="OnMouseLeftButtonDown">
 
@@ -122,6 +122,48 @@
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_text_box.png" Height="24" Stretch="None" />
                             <TextBlock Text="Text Box" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Name="btnSlider" HorizontalAlignment="Left" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/control_slider.png" Height="24" Stretch="None" />
+                            <TextBlock Text="Slider" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Name="btnHyperlink" HorizontalAlignment="Left" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/control_link.png" Height="24" Stretch="None" />
+                            <TextBlock Text="Hyperlink" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Name="btnProgressBar" HorizontalAlignment="Left" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/control_progress.png" Height="24" Stretch="None" />
+                            <TextBlock Text="Progress Bar" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Name="btnListBox" HorizontalAlignment="Left" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/control_listbox.png" Height="24" Stretch="None" />
+                            <TextBlock Text="List Box" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Name="btnDropdownList" HorizontalAlignment="Left" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/control_dropdown.png" Height="24" Stretch="None" />
+                            <TextBlock Text="Dropdown List" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Name="btnCheckBoxes" HorizontalAlignment="Left" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/control_check.png" Height="24" Stretch="None" />
+                            <TextBlock Text="Check Boxes" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Name="btnRadioButtons" HorizontalAlignment="Left" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/control_radio.png" Height="24" Stretch="None" />
+                            <TextBlock Text="Radio Buttons" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
                 </WrapPanel>
