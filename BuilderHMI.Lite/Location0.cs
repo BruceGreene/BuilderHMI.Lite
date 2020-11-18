@@ -219,7 +219,8 @@ namespace BuilderHMI.Lite
                 case HorizontalAlignment.Right:
                     right = Math.Max(width2 - dx, 0);
                     right = Math.Round(right / MainWindow.GridSize) * MainWindow.GridSize;  // snap to grid
-                    control.fe.Width = Math.Max(width1 + width2 - right, control.fe.MinWidth);
+                    right = Math.Min(right, width1 + width2 - control.fe.MinWidth);
+                    control.fe.Width = width1 + width2 - right;
                     dx = width2 - right;
                     break;
 
@@ -257,7 +258,8 @@ namespace BuilderHMI.Lite
                 case VerticalAlignment.Bottom:
                     bottom = Math.Max(height2 - dy, 0);
                     bottom = Math.Round(bottom / MainWindow.GridSize) * MainWindow.GridSize;  // snap to grid
-                    control.fe.Height = Math.Max(height1 + height2 - bottom, control.fe.MinHeight);
+                    bottom = Math.Min(bottom, height1 + height2 - control.fe.MinHeight);
+                    control.fe.Height = height1 + height2 - bottom;
                     dy = height2 - bottom;
                     break;
 
