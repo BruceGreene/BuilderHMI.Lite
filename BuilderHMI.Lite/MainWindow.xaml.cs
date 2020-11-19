@@ -42,6 +42,8 @@ namespace BuilderHMI.Lite
             label.HorizontalAlignment = HorizontalAlignment.Left;
             label.VerticalAlignment = VerticalAlignment.Top;
             AddToCanvas(label, 100, 100);
+
+            Directory.CreateDirectory(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images"));
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

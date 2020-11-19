@@ -68,12 +68,18 @@ namespace BuilderHMI.Lite
             var dbox = new OpenFileDialog();
             dbox.Title = "Select an Image File";
             dbox.Filter = "Image Files|*.jpg;*.jpeg;*.png|All Files|*.*";
-            dbox.InitialDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images");
-            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images", button.ImageFile);
+            string imageDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images");
+            dbox.InitialDirectory = imageDirectory;
+            string path = Path.Combine(imageDirectory, button.ImageFile);
             if (File.Exists(path))
                 dbox.FileName = Path.GetFileName(path);
             if (dbox.ShowDialog() == true && File.Exists(dbox.FileName))
-                tbImageFile.Text = Path.GetFileName(dbox.FileName);
+            {
+                string imageFileName = Path.GetFileName(dbox.FileName);
+                if (!Path.GetDirectoryName(dbox.FileName).Equals(imageDirectory, StringComparison.InvariantCultureIgnoreCase))
+                    File.Copy(dbox.FileName, Path.Combine(imageDirectory, imageFileName));
+                tbImageFile.Text = imageFileName;
+            }
         }
     }
 }
