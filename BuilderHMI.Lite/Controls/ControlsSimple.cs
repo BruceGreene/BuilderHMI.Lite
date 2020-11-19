@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -42,7 +43,7 @@ namespace BuilderHMI.Lite
         }
     }
 
-    public class HmiGroupBox : GroupBox, IHmiControl
+    public class HmiGroupBox : GroupBox, IGroupHmiControl
     {
         public HmiGroupBox()
         {
@@ -76,9 +77,76 @@ namespace BuilderHMI.Lite
             sb.Append(" />");
             return sb.ToString();
         }
+
+        public string ToXaml(int indentLevel, Dictionary<IHmiControl, List<IHmiControl>> groups, Thickness frame)
+        {
+            var groupChildren = groups[this];
+            if (groupChildren.Count == 0)
+                return ToXaml(indentLevel, true);
+
+            var sb = new StringBuilder();
+            for (int i = 0; i < indentLevel; i++) sb.Append("    ");
+            sb.Append("<GroupBox Style=\"{DynamicResource GroupBoxStyle}\"");
+            sb.AppendFormat(" Name=\"{0}\"", Name);
+            if (Header is string header)
+                sb.AppendFormat(" Header=\"{0}\"", WebUtility.HtmlEncode(header).Replace("\n", "&#10;"));
+            OwnerPage.AppendLocationXaml(this, sb);
+            sb.AppendLine(">");
+            for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
+            sb.AppendLine("<Grid>");
+
+            frame.Left += Margin.Left;
+            frame.Top += Margin.Top;
+            frame.Right += Margin.Right;
+            frame.Bottom += Margin.Bottom;
+            switch (HorizontalAlignment)
+            {
+                case HorizontalAlignment.Left:
+                case HorizontalAlignment.Center:
+                    frame.Left += 6;
+                    break;
+                case HorizontalAlignment.Right:
+                    frame.Right += 6;
+                    break;
+                case HorizontalAlignment.Stretch:
+                    frame.Left += 6;
+                    frame.Right += 6;
+                    break;
+            }
+            switch (VerticalAlignment)
+            {
+                case VerticalAlignment.Top:
+                case VerticalAlignment.Center:
+                    frame.Top += 20;
+                    break;
+                case VerticalAlignment.Bottom:
+                    frame.Bottom += 6;
+                    break;
+                case VerticalAlignment.Stretch:
+                    frame.Top += 20;
+                    frame.Bottom += 6;
+                    break;
+            }
+
+            foreach (IHmiControl control in groupChildren)
+            {
+                var margin0 = control.fe.Margin;
+                MainWindow.Shift(control.fe, frame);
+                if (groups.ContainsKey(control))
+                    sb.AppendLine((control as IGroupHmiControl).ToXaml(indentLevel + 2, groups, frame));
+                else
+                    sb.AppendLine(control.ToXaml(indentLevel + 2, true));
+                control.fe.Margin = margin0;
+            }
+            for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
+            sb.AppendLine("</Grid>");
+            for (int i = 0; i < indentLevel; i++) sb.Append("    ");
+            sb.Append("</GroupBox>");
+            return sb.ToString();
+        }
     }
 
-    public class HmiBorder : Border, IHmiControl
+    public class HmiBorder : Border, IGroupHmiControl
     {
         public HmiBorder()
         {
@@ -102,6 +170,41 @@ namespace BuilderHMI.Lite
             sb.AppendFormat(" Name=\"{0}\"", Name);
             OwnerPage.AppendLocationXaml(this, sb);
             sb.Append(" />");
+            return sb.ToString();
+        }
+
+        public string ToXaml(int indentLevel, Dictionary<IHmiControl, List<IHmiControl>> groups, Thickness frame)
+        {
+            var groupChildren = groups[this];
+            if (groupChildren.Count == 0)
+                return ToXaml(indentLevel, true);
+
+            var sb = new StringBuilder();
+            for (int i = 0; i < indentLevel; i++) sb.Append("    ");
+            sb.Append("<Border Style=\"{DynamicResource BorderStyle}\"");
+            sb.AppendFormat(" Name=\"{0}\"", Name);
+            OwnerPage.AppendLocationXaml(this, sb);
+            sb.AppendLine(">");
+            for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
+            sb.AppendLine("<Grid>");
+            frame.Left += Margin.Left;
+            frame.Top += Margin.Top;
+            frame.Right += Margin.Right;
+            frame.Bottom += Margin.Bottom;
+            foreach (IHmiControl control in groupChildren)
+            {
+                var margin0 = control.fe.Margin;
+                MainWindow.Shift(control.fe, frame);
+                if (groups.ContainsKey(control))
+                    sb.AppendLine((control as IGroupHmiControl).ToXaml(indentLevel + 2, groups, frame));
+                else
+                    sb.AppendLine(control.ToXaml(indentLevel + 2, true));
+                control.fe.Margin = margin0;
+            }
+            for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
+            sb.AppendLine("</Grid>");
+            for (int i = 0; i < indentLevel; i++) sb.Append("    ");
+            sb.Append("</Border>");
             return sb.ToString();
         }
     }

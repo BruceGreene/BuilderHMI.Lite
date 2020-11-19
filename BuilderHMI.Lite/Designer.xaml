@@ -254,6 +254,7 @@
                 <TextBlock Text="• Arrow keys to nudge controls." Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
                 <TextBlock Text="• Ctrl+B to Back, Ctrl+F to Front." Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
                 <TextBlock Text="• Ctrl+X/C/V to Cut/Copy/Paste." Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
+                <TextBlock Text="• Ctrl+N to view XAML in Notepad." Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
             </StackPanel>
         </Grid>
     </Border>

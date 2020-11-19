@@ -63,6 +63,7 @@ namespace BuilderHMI.Lite
                     case Key.B: SelectedControlToBack(); break;
                     case Key.C: CopySelectedControl(); break;
                     case Key.F: SelectedControlToFront(); break;
+                    case Key.N: ViewXaml(); break;
                     case Key.V: Paste(); break;
                     case Key.X: CutSelectedControl(); break;
                     case Key.Left:
@@ -87,6 +88,13 @@ namespace BuilderHMI.Lite
             }
 
             e.Handled = true;
+        }
+
+        private void ViewXaml()
+        {
+            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Controls.xaml");
+            File.WriteAllText(path, "        " + ToXaml());
+            System.Diagnostics.Process.Start("notepad.exe", path);
         }
 
         public IHmiControl SelectedControl
@@ -242,7 +250,7 @@ namespace BuilderHMI.Lite
             }
         }
 
-        public static bool IsInside(IHmiControl controlInner, IHmiControl controlOuter)
+        private static bool IsInside(IHmiControl controlInner, IHmiControl controlOuter)
         {
             if (controlInner == controlOuter || Panel.GetZIndex(controlInner.fe) < Panel.GetZIndex(controlOuter.fe))
                 return false;
@@ -257,6 +265,45 @@ namespace BuilderHMI.Lite
             return true;
         }
 
+        public static void Shift(FrameworkElement fe, Thickness frame)
+        {
+            double left = 0, top = 0, right = 0, bottom = 0;
+            switch (fe.HorizontalAlignment)
+            {
+                case HorizontalAlignment.Left:
+                    left = fe.Margin.Left - frame.Left;
+                    break;
+                case HorizontalAlignment.Center:
+                    left = fe.Margin.Left - frame.Left + frame.Right;
+                    break;
+                case HorizontalAlignment.Right:
+                    right = fe.Margin.Right - frame.Right;
+                    break;
+                case HorizontalAlignment.Stretch:
+                    left = fe.Margin.Left - frame.Left;
+                    right = fe.Margin.Right - frame.Right;
+                    break;
+            }
+
+            switch (fe.VerticalAlignment)
+            {
+                case VerticalAlignment.Top:
+                    top = fe.Margin.Top - frame.Top;
+                    break;
+                case VerticalAlignment.Center:
+                    top = fe.Margin.Top - frame.Top + frame.Bottom;
+                    break;
+                case VerticalAlignment.Bottom:
+                    bottom = fe.Margin.Bottom - frame.Bottom;
+                    break;
+                case VerticalAlignment.Stretch:
+                    top = fe.Margin.Top - frame.Top;
+                    bottom = fe.Margin.Bottom - frame.Bottom;
+                    break;
+            }
+            fe.Margin = new Thickness(left, top, right, bottom);
+        }
+
         public static bool InMoveList(IHmiControl control)
         {
             foreach (var item in control.OwnerPage.moveList)
@@ -266,7 +313,7 @@ namespace BuilderHMI.Lite
             return false;
         }
 
-        public static double GetLeft(IHmiControl control)
+        private static double GetLeft(IHmiControl control)
         {
             if (control.fe.HorizontalAlignment == HorizontalAlignment.Right)
                 return control.OwnerPage.gridCanvas.ActualWidth - control.fe.ActualWidth - control.fe.Margin.Right;
@@ -275,7 +322,7 @@ namespace BuilderHMI.Lite
             return control.fe.Margin.Left;
         }
 
-        public static double GetRight(IHmiControl control)
+        private static double GetRight(IHmiControl control)
         {
             if (control.fe.HorizontalAlignment == HorizontalAlignment.Left)
                 return control.OwnerPage.gridCanvas.ActualWidth - control.fe.ActualWidth - control.fe.Margin.Left;
@@ -284,7 +331,7 @@ namespace BuilderHMI.Lite
             return control.fe.Margin.Right;
         }
 
-        public static double GetTop(IHmiControl control)
+        private static double GetTop(IHmiControl control)
         {
             if (control.fe.VerticalAlignment == VerticalAlignment.Bottom)
                 return control.OwnerPage.gridCanvas.ActualHeight - control.fe.ActualHeight - control.fe.Margin.Bottom;
@@ -293,7 +340,7 @@ namespace BuilderHMI.Lite
             return control.fe.Margin.Top;
         }
 
-        public static double GetBottom(IHmiControl control)
+        private static double GetBottom(IHmiControl control)
         {
             if (control.fe.VerticalAlignment == VerticalAlignment.Top)
                 return control.OwnerPage.gridCanvas.ActualHeight - control.fe.ActualHeight - control.fe.Margin.Top;
@@ -759,7 +806,7 @@ namespace BuilderHMI.Lite
         }
 
         #region XAML
-        public static string InsertNamespaces(string xaml)
+        private static string InsertNamespaces(string xaml)
         {
             if (xaml.Contains("http://schemas.microsoft.com/winfx/2006/xaml/presentation")) return xaml;
 
@@ -772,6 +819,52 @@ namespace BuilderHMI.Lite
             sb.Replace("<Hmi", "<local:Hmi");
             sb.Replace("</Hmi", "</local:Hmi");
             return sb.ToString();
+        }
+
+        private string ToXaml()
+        {
+            // Generate xaml for all controls in Z-order:
+            var sortedChildren = new SortedList<int, IHmiControl>(gridCanvas.Children.Count);
+            foreach (object child in gridCanvas.Children)
+            {
+                if (child is IHmiControl control)
+                    sortedChildren[Panel.GetZIndex(control.fe)] = control;
+            }
+
+            var groups = new Dictionary<IHmiControl, List<IHmiControl>>();  // all group-type controls and collections of controls immediately inside them
+            var sortedChildrenValues = sortedChildren.Values;
+            for (int i = sortedChildrenValues.Count - 1; i >= 0; i--)
+            {
+                if (sortedChildrenValues[i] is IGroupHmiControl group)
+                {
+                    var groupChildren = new List<IHmiControl>();
+                    groups.Add(group, groupChildren);
+                    for (int j = sortedChildrenValues.Count - 1; j > i; j--)
+                    {
+                        IHmiControl control = sortedChildrenValues[j];
+                        if (IsInside(control, group))
+                        {
+                            if (group.fe.HorizontalAlignment != control.fe.HorizontalAlignment && group.fe.HorizontalAlignment != HorizontalAlignment.Stretch) continue;
+                            if (group.fe.VerticalAlignment != control.fe.VerticalAlignment && group.fe.VerticalAlignment != VerticalAlignment.Stretch) continue;
+
+                            groupChildren.Insert(0, control);
+                            sortedChildren.RemoveAt(j);
+                        }
+                    }
+                }
+            }
+
+            var sb = new StringBuilder();
+            var frame = new Thickness();
+            foreach (IHmiControl child in sortedChildren.Values)
+            {
+                if (groups.ContainsKey(child))
+                    sb.AppendLine((child as IGroupHmiControl).ToXaml(2, groups, frame));
+                else
+                    sb.AppendLine(child.ToXaml(2, true));
+            }
+
+            return sb.ToString().Trim();
         }
 
         public void AppendLocationXaml(IHmiControl control, StringBuilder sb)
@@ -789,7 +882,7 @@ namespace BuilderHMI.Lite
                 sb.AppendFormat(" Height=\"{0}\"", (int)control.fe.Height);
         }
 
-        public string ControlToXaml(IHmiControl control)
+        private string ControlToXaml(IHmiControl control)
         {
             if ((control.Flags & ECtrlFlags.IsGroup) > 0)
             {
@@ -921,20 +1014,9 @@ namespace BuilderHMI.Lite
                 CopyProjectFile("App.xaml.cs");
                 CopyProjectFile("MainWindow.xaml.cs");
 
-                // Generate xaml for all controls in Z-order:
-                var sortedChildren = new SortedList<int, IHmiControl>(gridCanvas.Children.Count);
-                foreach (object child in gridCanvas.Children)
-                {
-                    if (child is IHmiControl control)
-                        sortedChildren[Panel.GetZIndex(control.fe)] = control;
-                }
-                var sb = new StringBuilder();
-                foreach (IHmiControl child in sortedChildren.Values)
-                    sb.AppendLine(child.ToXaml(2, true));
-
                 // Generate MainWindow.xaml, specifying the project name and window title:
                 path = Path.Combine(templateFolder, "MainWindow.xaml");
-                text = File.ReadAllText(path).Replace("__PROJECT_NAME__", projectName).Replace("__WINDOW_TITLE__", title).Replace("__CONTROLS__", sb.ToString().Trim());
+                text = File.ReadAllText(path).Replace("__PROJECT_NAME__", projectName).Replace("__WINDOW_TITLE__", title).Replace("__CONTROLS__", ToXaml());
                 path = Path.Combine(projectFolder, "MainWindow.xaml");
                 File.WriteAllText(path, text);
 
@@ -1018,20 +1100,9 @@ namespace BuilderHMI.Lite
                 CopyProjectFile("App.xaml.cs");
                 CopyProjectFile("MainWindow.xaml.cs");
 
-                // Generate xaml for all controls in Z-order:
-                var sortedChildren = new SortedList<int, IHmiControl>(gridCanvas.Children.Count);
-                foreach (object child in gridCanvas.Children)
-                {
-                    if (child is IHmiControl control)
-                        sortedChildren[Panel.GetZIndex(control.fe)] = control;
-                }
-                var sb = new StringBuilder();
-                foreach (IHmiControl child in sortedChildren.Values)
-                    sb.AppendLine(child.ToXaml(2, true));
-
                 // Generate MainWindow.xaml, specifying the project name and window title:
                 string path = Path.Combine(templateFolder, "MainWindow.xaml");
-                string text = File.ReadAllText(path).Replace("__PROJECT_NAME__", projectName).Replace("__WINDOW_TITLE__", title).Replace("__CONTROLS__", sb.ToString().Trim());
+                string text = File.ReadAllText(path).Replace("__PROJECT_NAME__", projectName).Replace("__WINDOW_TITLE__", title).Replace("__CONTROLS__", ToXaml());
                 path = Path.Combine(projectFolder, "MainWindow.xaml");
                 File.WriteAllText(path, text);
 

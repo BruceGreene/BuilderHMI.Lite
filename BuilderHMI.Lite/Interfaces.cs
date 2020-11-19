@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Text;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -29,7 +29,12 @@ namespace BuilderHMI.Lite
         string ToXaml(int indentLevel, bool vs = false);
     }
 
-    public interface IHmiListControl : IHmiControl
+    public interface IGroupHmiControl : IHmiControl  // Border and GroupBox
+    {
+        string ToXaml(int indentLevel, Dictionary<IHmiControl, List<IHmiControl>> groups, Thickness frame);
+    }
+
+    public interface IHmiListControl : IHmiControl  // Listbox, DropdownList, Checkboxes and RadioButtons
     {
         string Elements { get; set; }
     }
