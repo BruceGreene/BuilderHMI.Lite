@@ -91,7 +91,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\HmiListBoxProperties.xaml">
+    <Page Include="Controls\HmiItemsProperties.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -136,8 +136,8 @@
     <Compile Include="Controls\HmiImageProperties.xaml.cs">
       <DependentUpon>HmiImageProperties.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\HmiListBoxProperties.xaml.cs">
-      <DependentUpon>HmiListBoxProperties.xaml</DependentUpon>
+    <Compile Include="Controls\HmiItemsProperties.xaml.cs">
+      <DependentUpon>HmiItemsProperties.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\HmiRangeBaseProperties.xaml.cs">
       <DependentUpon>HmiRangeBaseProperties.xaml</DependentUpon>
@@ -240,6 +240,9 @@
     <Resource Include="Images\control_link.png" />
     <Resource Include="Images\control_progress.png" />
     <Resource Include="Images\control_slider.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\control_tree.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -53,7 +53,7 @@ namespace BuilderHMI.Lite
         public Size InitialSize { get { return new Size(100, 100); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.Resize; } }
 
-        private static HmiListBoxProperties properties = new HmiListBoxProperties("List Box Properties");
+        private static HmiItemsProperties properties = new HmiItemsProperties("List Box Properties");
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
         public string ToXaml(int indentLevel, bool vs = false)
@@ -132,7 +132,7 @@ namespace BuilderHMI.Lite
         public Size InitialSize { get { return new Size(100, double.NaN); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.ResizeWidth; } }
 
-        private static HmiListBoxProperties properties = new HmiListBoxProperties("Dropdown List Properties");
+        private static HmiItemsProperties properties = new HmiItemsProperties("Dropdown List Properties");
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
         public string ToXaml(int indentLevel, bool vs = false)
@@ -214,7 +214,7 @@ namespace BuilderHMI.Lite
         public Size InitialSize { get { return new Size(double.NaN, double.NaN); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.None; } }
 
-        private static HmiListBoxProperties properties = new HmiListBoxProperties("Checkbox Group Properties");
+        private static HmiItemsProperties properties = new HmiItemsProperties("Checkbox Group Properties");
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
         public string ToXaml(int indentLevel, bool vs = false)
@@ -295,7 +295,7 @@ namespace BuilderHMI.Lite
         public Size InitialSize { get { return new Size(double.NaN, double.NaN); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.None; } }
 
-        private static HmiListBoxProperties properties = new HmiListBoxProperties("Radio Button Group Properties");
+        private static HmiItemsProperties properties = new HmiItemsProperties("Radio Button Group Properties");
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
         public string ToXaml(int indentLevel, bool vs = false)
@@ -320,6 +320,118 @@ namespace BuilderHMI.Lite
             else
             {
                 sb.AppendFormat("<HmiRadioButtons Name=\"{0}\"", Name);
+                if (Elements.Length > 0) sb.AppendFormat(" Elements=\"{0}\"", Elements);
+                OwnerPage.AppendLocationXaml(this, sb);
+                sb.Append(" />");
+            }
+
+            return sb.ToString();
+        }
+    }
+
+    public class HmiTreeView : TreeView, IHmiListControl
+    {
+        public HmiTreeView()
+        {
+            Focusable = false;
+            Elements = "Item 1|Item 2|Item 3||Item 4|Item 5";
+            SetResourceReference(StyleProperty, "TreeViewStyle");
+        }
+
+        public static readonly DependencyProperty ElementsProperty =
+            DependencyProperty.Register("Elements", typeof(string), typeof(HmiTreeView), new FrameworkPropertyMetadata("", OnElementsChanged));
+
+        public string Elements
+        {
+            get { return (string)GetValue(ElementsProperty); }
+            set { SetValue(ElementsProperty, value); }
+        }
+
+        private static void OnElementsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            (d as HmiTreeView).CreateItems((string)e.NewValue);
+        }
+
+        private void CreateItems(string elements)
+        {
+            Items.Clear();
+            ItemCollection items = Items;
+            string[] labels = elements.Split('|');  // "Item 1|Item 2|Item 3||Item 4|Item 5"
+            foreach (string label in labels)
+            {
+                if (label.Length > 0)
+                {
+                    var tvi = new TreeViewItem();
+                    tvi.SetResourceReference(StyleProperty, "TreeViewItemStyle");
+                    tvi.Header = label;
+                    tvi.IsExpanded = true;
+                    items.Add(tvi);
+                    if (items == Items)
+                        items = tvi.Items;
+                }
+                else
+                {
+                    items = Items;
+                }
+            }
+        }
+
+        public FrameworkElement fe { get { return this; } }
+        public MainWindow OwnerPage { get; set; }
+        public string NamePrefix { get { return "tree"; } }
+        public Size InitialSize { get { return new Size(100, 100); } }
+        public ECtrlFlags Flags { get { return ECtrlFlags.Resize; } }
+
+        private static HmiItemsProperties properties = new HmiItemsProperties("Tree View Properties", "Double pipe \"||\" before top-level items.");
+        public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
+
+        public string ToXaml(int indentLevel, bool vs = false)
+        {
+            var sb = new StringBuilder();
+            for (int i = 0; i < indentLevel; i++) sb.Append("    ");
+
+            if (vs)
+            {
+                sb.AppendFormat("<TreeView Style=\"{{DynamicResource TreeViewStyle}}\" Name=\"{0}\"", Name);
+                OwnerPage.AppendLocationXaml(this, sb);
+                sb.AppendLine(">");
+                bool subitem = false;
+                string[] labels = Elements.Split('|');
+                foreach (string label in labels)
+                {
+                    if (label.Length > 0)
+                    {
+                        if (subitem)
+                        {
+                            for (int i = 0; i < indentLevel + 2; i++) sb.Append("    ");
+                            sb.AppendFormat("<TreeViewItem Style=\"{{DynamicResource TreeViewItemStyle}}\" Header=\"{0}\" />\r\n", label);
+                        }
+                        else
+                        {
+                            for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
+                            sb.AppendFormat("<TreeViewItem Style=\"{{DynamicResource TreeViewItemStyle}}\" Header=\"{0}\">\r\n", label);
+                            subitem = true;
+                        }
+                    }
+                    else if (subitem)
+                    {
+                        for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
+                        sb.AppendLine("</TreeViewItem>");
+                        subitem = false;
+                    }
+                }
+
+                if (subitem)
+                {
+                    for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
+                    sb.AppendLine("</TreeViewItem>");
+                }
+                for (int i = 0; i < indentLevel; i++) sb.Append("    ");
+                sb.Append("</TreeView>");
+            }
+            else
+            {
+                sb.AppendFormat("<HmiTreeView Name=\"{0}\"", Name);
                 if (Elements.Length > 0) sb.AppendFormat(" Elements=\"{0}\"", Elements);
                 OwnerPage.AppendLocationXaml(this, sb);
                 sb.Append(" />");

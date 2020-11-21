@@ -3,14 +3,15 @@
 namespace BuilderHMI.Lite
 {
     /// <summary>
-    /// Interaction logic for HmiListBoxProperties.xaml
+    /// Interaction logic for HmiItemsProperties.xaml
     /// </summary>
-    public partial class HmiListBoxProperties : UserControl, IHmiPropertyPage
+    public partial class HmiItemsProperties : UserControl, IHmiPropertyPage
     {
-        public HmiListBoxProperties(string title)
+        public HmiItemsProperties(string title, string hint = "")
         {
             InitializeComponent();
             tbTitle.Text = title;
+            tbHint.Text = hint;
         }
 
         public void Reset()

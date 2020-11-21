@@ -166,6 +166,12 @@
                             <TextBlock Text="Radio Buttons" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
+                    <Button Name="btnTreeView" HorizontalAlignment="Left" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/control_tree.png" Height="24" Stretch="None" />
+                            <TextBlock Text="Tree View" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
+                        </StackPanel>
+                    </Button>
                 </WrapPanel>
             </Grid>
 

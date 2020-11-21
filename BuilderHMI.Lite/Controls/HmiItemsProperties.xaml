@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="BuilderHMI.Lite.HmiListBoxProperties"
+﻿<UserControl x:Class="BuilderHMI.Lite.HmiItemsProperties"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Width="250" FontSize="16" Background="{DynamicResource BackgroundBrush2}">
@@ -21,6 +21,7 @@
             <TextBlock Text="Items:" FontSize="14" Foreground="{DynamicResource TextBrush2}" />
             <TextBlock Text="&quot;Item1|Item2&quot;" FontSize="12" Margin="12,0,0,0" VerticalAlignment="Bottom" Foreground="{DynamicResource TextBrush2}" />
         </StackPanel>
-        <TextBox Name="tbItems" Text="ITEM1|ITEM2" Margin="0,4,0,8" TextWrapping="Wrap" TextChanged="Items_TextChanged" />
+        <TextBox Name="tbItems" Text="ITEM1|ITEM2" Margin="0,4" TextWrapping="Wrap" TextChanged="Items_TextChanged" />
+        <TextBlock Name="tbHint" Text="(hint)" FontSize="12" Margin="12,0,0,0" Foreground="{DynamicResource TextBrush2}" />
     </StackPanel>
 </UserControl>

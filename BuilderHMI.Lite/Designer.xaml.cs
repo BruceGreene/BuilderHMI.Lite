@@ -91,6 +91,7 @@ namespace BuilderHMI.Lite
                 case "btnDropdownList": mainWindow.AddNew<HmiDropdownList>(); break;
                 case "btnCheckBoxes": mainWindow.AddNew<HmiCheckBoxes>(); break;
                 case "btnRadioButtons": mainWindow.AddNew<HmiRadioButtons>(); break;
+                case "btnTreeView": mainWindow.AddNew<HmiTreeView>(); break;
 
                 case "btnCut": mainWindow.CutSelectedControl(); break;
                 case "btnCopy": mainWindow.CopySelectedControl(); break;

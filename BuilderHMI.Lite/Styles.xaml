@@ -6,6 +6,7 @@
     <SolidColorBrush x:Key="PageBackgroundBrush" Color="#FFDCE7F4"/>
     <SolidColorBrush x:Key="TextBoxBackgroundBrush" Color="#FF8DAED9"/>
     <SolidColorBrush x:Key="BorderBackgroundBrush" Color="#FFC1D9F1"/>
+    <SolidColorBrush x:Key="TreeViewBackgroundBrush" Color="White"/>
     <SolidColorBrush x:Key="GroupBoxBorderBrush" Color="#FF7592B5"/>
     <SolidColorBrush x:Key="TextBrush" Color="#FF30509F"/>
     <SolidColorBrush x:Key="HyperlinkBrush" Color="#FF0066CC"/>
@@ -144,6 +145,20 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <Style x:Key="TreeViewStyle" TargetType="TreeView">
+        <Setter Property="Background" Value="{DynamicResource TreeViewBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="MinWidth" Value="35" />
+        <Setter Property="MinHeight" Value="35" />
+        <Setter Property="Padding" Value="4"/>
+    </Style>
+
+    <Style x:Key="TreeViewItemStyle" TargetType="TreeViewItem">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
     </Style>
 
     <Style x:Key="RadioButtonStyle" TargetType="RadioButton">
