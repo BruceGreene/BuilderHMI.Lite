@@ -24,6 +24,7 @@ namespace BuilderHMI.Lite
         private const int pixelOffset = 12;
 
         private Designer designer;
+        private XamlWindow xamlWindow;
         private Marker marker;  // red box surrounding SelectedControl
         private bool leftButtonPressed = false;
         private IHmiControl draggingControl = null, selectedControl = null;
@@ -35,6 +36,7 @@ namespace BuilderHMI.Lite
             InitializeComponent();
 
             designer = new Designer(this);
+            xamlWindow = new XamlWindow();
             marker = new Marker(gridCanvas);
 
             var label = new HmiTextBlock();
@@ -48,7 +50,7 @@ namespace BuilderHMI.Lite
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            designer.Owner = this;
+            designer.Owner = xamlWindow.Owner = this;
             designer.Show();
         }
 
@@ -63,13 +65,13 @@ namespace BuilderHMI.Lite
                     case Key.B: SelectedControlToBack(); break;
                     case Key.C: CopySelectedControl(); break;
                     case Key.F: SelectedControlToFront(); break;
-                    case Key.N: ViewXaml(); break;
                     case Key.V: Paste(); break;
+                    case Key.W: OpenXamlWindow(); break;
                     case Key.X: CutSelectedControl(); break;
                     case Key.Left:
                     case Key.Right:
                     case Key.Up:
-                    case Key.Down: ArrowKeyNudge(e.Key, true); break;
+                    case Key.Down: NudgeSelectedControl(e.Key, true); break;
                     default: return;
                 }
             }
@@ -82,7 +84,7 @@ namespace BuilderHMI.Lite
                     case Key.Left:
                     case Key.Right:
                     case Key.Up:
-                    case Key.Down: ArrowKeyNudge(e.Key, false); break;
+                    case Key.Down: NudgeSelectedControl(e.Key, false); break;
                     default: return;
                 }
             }
@@ -90,11 +92,16 @@ namespace BuilderHMI.Lite
             e.Handled = true;
         }
 
-        private void ViewXaml()
+        private void OpenXamlWindow()
         {
-            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Controls.xaml");
-            File.WriteAllText(path, "        " + ToXaml());
-            System.Diagnostics.Process.Start("notepad.exe", path);
+            xamlWindow.Show();
+            UpdateXamlWindow();
+        }
+
+        private void UpdateXamlWindow()
+        {
+            if (xamlWindow.Visibility == Visibility.Visible)
+                xamlWindow.tbXaml.Text = ToXaml();
         }
 
         public IHmiControl SelectedControl
@@ -107,8 +114,16 @@ namespace BuilderHMI.Lite
             {
                 if (selectedControl != value)
                 {
+                    if (selectedControl != null && selectedControl.IsEmpty)
+                    {
+                        childrenByName.Remove(selectedControl.Name);
+                        gridCanvas.Children.Remove(selectedControl.fe);
+                    }
+
                     selectedControl = marker.Control = value;
                     designer.OnSelectedControlChanged();
+                    if (selectedControl == null)
+                        UpdateXamlWindow();
                 }
             }
         }
@@ -247,7 +262,51 @@ namespace BuilderHMI.Lite
                 location0.Clear();
                 moveList.Clear();
                 ReleaseMouseCapture();
+                UpdateXamlWindow();
             }
+        }
+
+        private void NudgeSelectedControl(Key key, bool ctrl)
+        {
+            if (SelectedControl == null)
+            {
+                SystemSounds.Beep.Play();
+                return;
+            }
+
+            IHmiControl control = SelectedControl;
+            double delta = ctrl ? 10 * GridSize : GridSize;  // Ctrl+arrows for 10x nudge
+            double left, left0 = GetLeft(control);
+            double top, top0 = GetTop(control);
+            switch (key)
+            {
+                case Key.Left: left = Math.Max(left0 - delta, 0); top = top0; break;
+                case Key.Right: left = left0 + delta; top = top0; break;
+                case Key.Up: left = left0; top = Math.Max(top0 - delta, 0); break;
+                case Key.Down: left = left0; top = top0 + delta; break;
+                default: return;
+            }
+            double dx = left - left0, dy = top - top0;
+
+            if (dx == 0 && dy == 0)  // at the edge
+            {
+                SystemSounds.Beep.Play();
+                return;
+            }
+
+            if ((control.Flags & ECtrlFlags.IsGroup) > 0 && !Keyboard.IsKeyDown(Key.LeftShift) && !Keyboard.IsKeyDown(Key.RightShift))
+            {
+                foreach (object child in gridCanvas.Children)
+                {
+                    if ((child is IHmiControl control2) && IsInside(control2, control))
+                        Location0.Shift(control2.fe, dx, dy);
+                }
+            }
+
+            Location0.Shift(control.fe, dx, dy);
+            marker.Margin = control.fe.Margin;
+            designer.UpdateLocation();
+            UpdateXamlWindow();
         }
 
         private static bool IsInside(IHmiControl controlInner, IHmiControl controlOuter)
@@ -353,9 +412,118 @@ namespace BuilderHMI.Lite
         {
             return new Point(GetLeft(control), GetTop(control));
         }
+        #endregion Move and Size
 
-        public void SetAlignment(IHmiControl control, HorizontalAlignment alignH, VerticalAlignment alignV)
+        public void AddNew<T>() where T : IHmiControl, new()
         {
+            IHmiControl control = new T();
+            SelectedControl = null;
+            control.fe.HorizontalAlignment = HorizontalAlignment.Left;
+            control.fe.VerticalAlignment = VerticalAlignment.Top;
+            control.fe.Width = control.InitialSize.Width;
+            control.fe.Height = control.InitialSize.Height;
+            AddToCanvas(control, pixelOffset, pixelOffset);
+            control.fe.SizeChanged += OnAddNewSizeChanged;
+            UpdateXamlWindow();
+        }
+
+        private void OnAddNewSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            IHmiControl control = (IHmiControl)sender;
+            if (control.fe.ActualWidth > 0 && control.fe.ActualHeight > 0)
+            {
+                control.fe.SizeChanged -= OnAddNewSizeChanged;  // one-shot
+                SelectedControl = control;
+            }
+        }
+
+        private const int BASE_ZINDEX = 0x10000;
+        private int zindexTop = BASE_ZINDEX;     // Top is incremented when a control is added or moved to front. 
+        private int zindexBottom = BASE_ZINDEX;  // Bottom is decremented when a control is moved to back.
+
+        private void AddToCanvas(IHmiControl control, double leftShift = 0, double topShift = 0)
+        {
+            control.OwnerPage = this;
+            SetName(control, control.Name);
+            Panel.SetZIndex(control.fe, zindexTop++);
+            Location0.Shift(control.fe, leftShift, topShift);
+            gridCanvas.Children.Add(control.fe);
+        }
+
+        private Dictionary<string, IHmiControl> childrenByName = new Dictionary<string, IHmiControl>();
+
+        public void SetName(IHmiControl control, string name)
+        {
+            while (childrenByName.ContainsValue(control))
+            {
+                var item = childrenByName.First(pair => pair.Value == control);
+                childrenByName.Remove(item.Key);
+            }
+
+            // Is the candidate name empty or invalid?
+            name = name.Replace(' ', '_');
+            bool invalid = (name.Length == 0 || !(char.IsLetter(name[0]) || name[0] == '_'));
+            foreach (char ch in name)
+            {
+                if (!char.IsLetterOrDigit(ch) && ch != '_')
+                {
+                    invalid = true;
+                    break;
+                }
+            }
+
+            if (invalid)
+            {
+                // Generate a default name if invalid.
+                int index = 1;
+                do
+                {
+                    name = string.Format("{0}{1}", control.NamePrefix, index++);
+                }
+                while (childrenByName.ContainsKey(name));
+            }
+            else if (childrenByName.ContainsKey(name))
+            {
+                // Strip off appended "name_123" if present.
+                string nameCore = name;
+                int index = nameCore.LastIndexOf('_');
+                if (index > 0)
+                {
+                    bool digitsOnly = true;
+                    for (int i = index + 1; i < nameCore.Length; i++)
+                    {
+                        if (!char.IsDigit(nameCore[i]))
+                        {
+                            digitsOnly = false;
+                            break;
+                        }
+                    }
+                    if (digitsOnly)
+                        nameCore = nameCore.Substring(0, index);
+                }
+
+                // Increment and append "name_123" until unique.
+                index = 1;
+                do
+                {
+                    name = string.Format("{0}_{1}", nameCore, index++);
+                }
+                while (childrenByName.ContainsKey(name));
+            }
+
+            control.Name = name;
+            childrenByName[control.Name] = control;
+        }
+
+        public void SetSelectedControlAlignment(HorizontalAlignment alignH, VerticalAlignment alignV)
+        {
+            if (SelectedControl == null)
+            {
+                SystemSounds.Beep.Play();
+                return;
+            }
+
+            IHmiControl control = SelectedControl;
             Thickness margin = control.fe.Margin;
             Size size = control.fe.RenderSize;
             Size sizeGrid = gridCanvas.RenderSize;
@@ -538,69 +706,19 @@ namespace BuilderHMI.Lite
                 control.fe.VerticalAlignment = VerticalAlignment.Stretch;
             }
 
-            if (SelectedControl == control)
-            {
-                marker.SetAlignment();
-                designer.UpdateLocation();
-            }
+            marker.SetAlignment();
+            designer.UpdateLocation();
+            UpdateXamlWindow();
         }
 
-        private void ArrowKeyNudge(Key key, bool ctrl)
+        public void SelectedControlToFront()
         {
-            IHmiControl control = SelectedControl;
-            double delta = ctrl ? 10 * GridSize : GridSize;  // Ctrl+arrows for 10x nudge
-            double left, left0 = GetLeft(control);
-            double top, top0 = GetTop(control);
-            switch (key)
-            {
-                case Key.Left: left = Math.Max(left0 - delta, 0); top = top0; break;
-                case Key.Right: left = left0 + delta; top = top0; break;
-                case Key.Up: left = left0; top = Math.Max(top0 - delta, 0); break;
-                case Key.Down: left = left0; top = top0 + delta; break;
-                default: return;
-            }
-            double dx = left - left0, dy = top - top0;
-
-            if (dx == 0 && dy == 0)  // at the edge
+            if (SelectedControl == null)
             {
                 SystemSounds.Beep.Play();
                 return;
             }
 
-            if ((control.Flags & ECtrlFlags.IsGroup) > 0 && !Keyboard.IsKeyDown(Key.LeftShift) && !Keyboard.IsKeyDown(Key.RightShift))
-            {
-                foreach (object child in gridCanvas.Children)
-                {
-                    if ((child is IHmiControl control2) && IsInside(control2, control))
-                        Location0.Shift(control2.fe, dx, dy);
-                }
-            }
-
-            Location0.Shift(control.fe, dx, dy);
-
-            if (SelectedControl == control)
-            {
-                marker.Margin = control.fe.Margin;
-                designer.UpdateLocation();
-            }
-        }
-        #endregion Move and Size
-
-        private const int BASE_ZINDEX = 0x10000;
-        private int zindexTop = BASE_ZINDEX;     // Top is incremented when a control is added or moved to front. 
-        private int zindexBottom = BASE_ZINDEX;  // Bottom is decremented when a control is moved to back.
-
-        private void AddToCanvas(IHmiControl control, double leftShift = 0, double topShift = 0)
-        {
-            control.OwnerPage = this;
-            SetName(control, control.Name);
-            Panel.SetZIndex(control.fe, zindexTop++);
-            Location0.Shift(control.fe, leftShift, topShift);
-            gridCanvas.Children.Add(control.fe);
-        }
-
-        public void SelectedControlToFront()
-        {
             if (Panel.GetZIndex(SelectedControl.fe) == (zindexTop - 1) && (SelectedControl.Flags & ECtrlFlags.IsGroup) == 0)
             {
                 SystemSounds.Beep.Play();
@@ -625,10 +743,17 @@ namespace BuilderHMI.Lite
                 foreach (IHmiControl control in sortedChildren.Values)
                     Panel.SetZIndex(control.fe, zindexTop++);
             }
+            UpdateXamlWindow();
         }
 
         public void SelectedControlToBack()
         {
+            if (SelectedControl == null)
+            {
+                SystemSounds.Beep.Play();
+                return;
+            }
+
             if (Panel.GetZIndex(SelectedControl.fe) == zindexBottom && (SelectedControl.Flags & ECtrlFlags.IsGroup) == 0)
             {
                 SystemSounds.Beep.Play();
@@ -650,93 +775,7 @@ namespace BuilderHMI.Lite
 
             Panel.SetZIndex(SelectedControl.fe, --zindexBottom);
             marker.Control = SelectedControl;
-        }
-
-        private Dictionary<string, IHmiControl> childrenByName = new Dictionary<string, IHmiControl>();
-
-        public void SetName(IHmiControl control, string name)
-        {
-            while (childrenByName.ContainsValue(control))
-            {
-                var item = childrenByName.First(pair => pair.Value == control);
-                childrenByName.Remove(item.Key);
-            }
-
-            // Is the candidate name empty or invalid?
-            name = name.Replace(' ', '_');
-            bool invalid = (name.Length == 0 || !(char.IsLetter(name[0]) || name[0] == '_'));
-            foreach (char ch in name)
-            {
-                if (!char.IsLetterOrDigit(ch) && ch != '_')
-                {
-                    invalid = true;
-                    break;
-                }
-            }
-
-            if (invalid)
-            {
-                // Generate a default name if invalid.
-                int index = 1;
-                do
-                {
-                    name = string.Format("{0}{1}", control.NamePrefix, index++);
-                }
-                while (childrenByName.ContainsKey(name));
-            }
-            else if (childrenByName.ContainsKey(name))
-            {
-                // Strip off appended "name_123" if present.
-                string nameCore = name;
-                int index = nameCore.LastIndexOf('_');
-                if (index > 0)
-                {
-                    bool digitsOnly = true;
-                    for (int i = index + 1; i < nameCore.Length; i++)
-                    {
-                        if (!char.IsDigit(nameCore[i]))
-                        {
-                            digitsOnly = false;
-                            break;
-                        }
-                    }
-                    if (digitsOnly)
-                        nameCore = nameCore.Substring(0, index);
-                }
-
-                // Increment and append "name_123" until unique.
-                index = 1;
-                do
-                {
-                    name = string.Format("{0}_{1}", nameCore, index++);
-                }
-                while (childrenByName.ContainsKey(name));
-            }
-
-            control.Name = name;
-            childrenByName[control.Name] = control;
-        }
-
-        public void AddNew<T>() where T : IHmiControl, new()
-        {
-            IHmiControl control = new T();
-            SelectedControl = null;
-            control.fe.HorizontalAlignment = HorizontalAlignment.Left;
-            control.fe.VerticalAlignment = VerticalAlignment.Top;
-            control.fe.Width = control.InitialSize.Width;
-            control.fe.Height = control.InitialSize.Height;
-            AddToCanvas(control, pixelOffset, pixelOffset);
-            control.fe.SizeChanged += OnAddNewSizeChanged;
-        }
-
-        private void OnAddNewSizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            IHmiControl control = (IHmiControl)sender;
-            if (control.fe.ActualWidth > 0 && control.fe.ActualHeight > 0)
-            {
-                control.fe.SizeChanged -= OnAddNewSizeChanged;  // one-shot
-                SelectedControl = control;
-            }
+            UpdateXamlWindow();
         }
 
         public void DeleteSelectedControl()
@@ -771,6 +810,7 @@ namespace BuilderHMI.Lite
                 childrenByName.Remove(control.Name);
                 gridCanvas.Children.Remove(control.fe);
             }
+            UpdateXamlWindow();
         }
 
         public void CopySelectedControl()
@@ -802,7 +842,8 @@ namespace BuilderHMI.Lite
         public void Paste()
         {
             string xaml = Clipboard.GetText().Trim();
-            PasteFromXaml(xaml);
+            if (PasteFromXaml(xaml))
+                UpdateXamlWindow();
         }
 
         #region XAML
@@ -821,7 +862,7 @@ namespace BuilderHMI.Lite
             return sb.ToString();
         }
 
-        private string ToXaml()
+        private string ToXaml(int indentLevel = 0, bool eventHandlers = false)
         {
             // Generate xaml for all controls in Z-order:
             var sortedChildren = new SortedList<int, IHmiControl>(gridCanvas.Children.Count);
@@ -859,12 +900,29 @@ namespace BuilderHMI.Lite
             foreach (IHmiControl child in sortedChildren.Values)
             {
                 if (groups.ContainsKey(child))
-                    sb.AppendLine((child as IGroupHmiControl).ToXaml(2, groups, frame));
+                    sb.AppendLine((child as IGroupHmiControl).ToXaml(indentLevel, eventHandlers, groups, frame));
                 else
-                    sb.AppendLine(child.ToXaml(2, true));
+                    sb.AppendLine(child.ToXaml(indentLevel, eventHandlers, true));
             }
 
             return sb.ToString().Trim();
+        }
+
+        private string GenerateCodeBehind(bool eventHandlers)
+        {
+            if (!eventHandlers) return "";
+
+            var sortedChildren = new SortedList<string, IHmiControl>(gridCanvas.Children.Count);
+            foreach (object child in gridCanvas.Children)
+            {
+                if (child is IHmiControl control)
+                    sortedChildren[control.Name] = control;
+            }
+
+            var sb = new StringBuilder();
+            foreach (IHmiControl child in sortedChildren.Values)
+                child.AppendCodeBehind(sb);
+            return sb.ToString();
         }
 
         public void AppendLocationXaml(IHmiControl control, StringBuilder sb)
@@ -889,31 +947,31 @@ namespace BuilderHMI.Lite
                 bool nested = false;
                 var sb = new StringBuilder();
                 sb.AppendLine("<Grid>");
-                sb.AppendLine(control.ToXaml(1));
+                sb.AppendLine(control.ToXaml(1, false, false));
                 foreach (object child in gridCanvas.Children)
                 {
                     if ((child is IHmiControl control2) && IsInside(control2, control))
                     {
-                        sb.AppendLine(control2.ToXaml(1));
+                        sb.AppendLine(control2.ToXaml(1, false, false));
                         nested = true;
                     }
                 }
                 sb.Append("</Grid>");
-                return nested ? sb.ToString() : control.ToXaml(0);
+                return nested ? sb.ToString() : control.ToXaml(0, false, false);
             }
             else
             {
-                return control.ToXaml(0);
+                return control.ToXaml(0, false, false);
             }
         }
 
-        private void PasteFromXaml(string xaml)
+        private bool PasteFromXaml(string xaml)
         {
             // Create objects from xaml and add them to gridCanvas for Paste().
             if (!xaml.StartsWith("<"))
             {
                 SystemSounds.Beep.Play();
-                return;
+                return false;
             }
 
             xaml = InsertNamespaces(xaml);
@@ -925,7 +983,7 @@ namespace BuilderHMI.Lite
             catch
             {
                 SystemSounds.Beep.Play();
-                return;
+                return false;
             }
 
             if (fe is IHmiControl control)  // single control
@@ -933,6 +991,7 @@ namespace BuilderHMI.Lite
                 SelectedControl = null;
                 control.fe.SizeChanged += OnPasteSizeChanged;
                 AddToCanvas(control, pixelOffset, pixelOffset);
+                return true;
             }
             else if (fe is Grid grid)  // collection of controls in a grid
             {
@@ -956,13 +1015,12 @@ namespace BuilderHMI.Lite
                     }
                 }
 
-                if (added == 0)
-                    SystemSounds.Beep.Play();
+                if (added > 0)
+                    return true;
             }
-            else
-            {
-                SystemSounds.Beep.Play();
-            }
+
+            SystemSounds.Beep.Play();
+            return false;
         }
 
         private void OnPasteSizeChanged(object sender, SizeChangedEventArgs e)
@@ -977,7 +1035,8 @@ namespace BuilderHMI.Lite
         }
         #endregion XAML
 
-        public void GenerateDotNetFrameworkProject(string projectName, string title, bool open)
+        #region Project Generation
+        public void GenerateDotNetFrameworkProject(string projectName, string title, bool eventHandlers, bool open)
         {
             if (title.Length == 0)
                 title = projectName;
@@ -1012,12 +1071,17 @@ namespace BuilderHMI.Lite
                 // Copy project files from the template, specifying the project name:
                 CopyProjectFile("App.xaml");
                 CopyProjectFile("App.xaml.cs");
-                CopyProjectFile("MainWindow.xaml.cs");
 
                 // Generate MainWindow.xaml, specifying the project name and window title:
                 path = Path.Combine(templateFolder, "MainWindow.xaml");
-                text = File.ReadAllText(path).Replace("__PROJECT_NAME__", projectName).Replace("__WINDOW_TITLE__", title).Replace("__CONTROLS__", ToXaml());
+                text = File.ReadAllText(path).Replace("__PROJECT_NAME__", projectName).Replace("__WINDOW_TITLE__", title).Replace("__CONTROLS__", ToXaml(2, eventHandlers));
                 path = Path.Combine(projectFolder, "MainWindow.xaml");
+                File.WriteAllText(path, text);
+
+                // Generate MainWindow.xaml.cs with optional handlers for common events:
+                path = Path.Combine(templateFolder, "MainWindow.xaml.cs");
+                text = File.ReadAllText(path).Replace("__PROJECT_NAME__", projectName).Replace("__EVENT_HANDLERS__", GenerateCodeBehind(eventHandlers));
+                path = Path.Combine(projectFolder, "MainWindow.xaml.cs");
                 File.WriteAllText(path, text);
 
                 // Copy Images and add as project resources:
@@ -1071,7 +1135,7 @@ namespace BuilderHMI.Lite
             }
         }
 
-        public void GenerateDotNetCoreProject(string projectName, string title, bool open)
+        public void GenerateDotNetCoreProject(string projectName, string title, bool eventHandlers, bool open)
         {
             if (title.Length == 0)
                 title = projectName;
@@ -1098,12 +1162,17 @@ namespace BuilderHMI.Lite
                 // Copy project files from the template, specifying the project name:
                 CopyProjectFile("App.xaml");
                 CopyProjectFile("App.xaml.cs");
-                CopyProjectFile("MainWindow.xaml.cs");
 
                 // Generate MainWindow.xaml, specifying the project name and window title:
                 string path = Path.Combine(templateFolder, "MainWindow.xaml");
-                string text = File.ReadAllText(path).Replace("__PROJECT_NAME__", projectName).Replace("__WINDOW_TITLE__", title).Replace("__CONTROLS__", ToXaml());
+                string text = File.ReadAllText(path).Replace("__PROJECT_NAME__", projectName).Replace("__WINDOW_TITLE__", title).Replace("__CONTROLS__", ToXaml(2, eventHandlers));
                 path = Path.Combine(projectFolder, "MainWindow.xaml");
+                File.WriteAllText(path, text);
+
+                // Generate MainWindow.xaml.cs with optional handlers for common events:
+                path = Path.Combine(templateFolder, "MainWindow.xaml.cs");
+                text = File.ReadAllText(path).Replace("__PROJECT_NAME__", projectName).Replace("__EVENT_HANDLERS__", GenerateCodeBehind(eventHandlers));
+                path = Path.Combine(projectFolder, "MainWindow.xaml.cs");
                 File.WriteAllText(path, text);
 
                 // Copy Images and add as project resources:
@@ -1161,5 +1230,6 @@ namespace BuilderHMI.Lite
                 File.WriteAllText(path, text);
             }
         }
+        #endregion Project Generation
     }
 }

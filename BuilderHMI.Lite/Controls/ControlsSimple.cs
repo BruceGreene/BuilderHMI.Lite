@@ -26,20 +26,24 @@ namespace BuilderHMI.Lite
         public string NamePrefix { get { return "text"; } }
         public Size InitialSize { get { return new Size(double.NaN, double.NaN); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.None; } }
+        public bool IsEmpty { get { return string.IsNullOrEmpty(Text); } }
 
         private static HmiTextBlockProperties properties = new HmiTextBlockProperties();
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
-        public string ToXaml(int indentLevel, bool vs = false)
+        public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
             sb.Append(vs ? "<TextBlock Style=\"{DynamicResource TextBlockStyle}\"" : "<HmiTextBlock");
-            sb.AppendFormat(" Name=\"{0}\"", Name);
-            if (!string.IsNullOrEmpty(Text)) sb.AppendFormat(" Text=\"{0}\"", WebUtility.HtmlEncode(Text).Replace("\n", "&#10;"));
+            sb.AppendFormat(" Name=\"{0}\" Text=\"{1}\"", Name, WebUtility.HtmlEncode(Text).Replace("\n", "&#10;"));
             OwnerPage.AppendLocationXaml(this, sb);
             sb.Append(" />");
             return sb.ToString();
+        }
+
+        public void AppendCodeBehind(StringBuilder sb)
+        {
         }
     }
 
@@ -61,11 +65,12 @@ namespace BuilderHMI.Lite
         public string NamePrefix { get { return "group"; } }
         public Size InitialSize { get { return new Size(100, 100); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.Resize | ECtrlFlags.IsGroup; } }
+        public bool IsEmpty { get { return false; } }
 
         private static HmiTextBlockProperties properties = new HmiTextBlockProperties();
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
-        public string ToXaml(int indentLevel, bool vs = false)
+        public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
@@ -78,11 +83,11 @@ namespace BuilderHMI.Lite
             return sb.ToString();
         }
 
-        public string ToXaml(int indentLevel, Dictionary<IHmiControl, List<IHmiControl>> groups, Thickness frame)
+        public string ToXaml(int indentLevel, bool eventHandlers, Dictionary<IHmiControl, List<IHmiControl>> groups, Thickness frame)
         {
             var groupChildren = groups[this];
             if (groupChildren.Count == 0)
-                return ToXaml(indentLevel, true);
+                return ToXaml(indentLevel, eventHandlers, true);
 
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
@@ -133,9 +138,9 @@ namespace BuilderHMI.Lite
                 var margin0 = control.fe.Margin;
                 MainWindow.Shift(control.fe, frame);
                 if (groups.ContainsKey(control))
-                    sb.AppendLine((control as IGroupHmiControl).ToXaml(indentLevel + 2, groups, frame));
+                    sb.AppendLine((control as IGroupHmiControl).ToXaml(indentLevel + 2, eventHandlers, groups, frame));
                 else
-                    sb.AppendLine(control.ToXaml(indentLevel + 2, true));
+                    sb.AppendLine(control.ToXaml(indentLevel + 2, eventHandlers, true));
                 control.fe.Margin = margin0;
             }
             for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
@@ -143,6 +148,10 @@ namespace BuilderHMI.Lite
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
             sb.Append("</GroupBox>");
             return sb.ToString();
+        }
+
+        public void AppendCodeBehind(StringBuilder sb)
+        {
         }
     }
 
@@ -158,11 +167,12 @@ namespace BuilderHMI.Lite
         public string NamePrefix { get { return "border"; } }
         public Size InitialSize { get { return new Size(100, 100); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.Resize | ECtrlFlags.IsGroup; } }
+        public bool IsEmpty { get { return false; } }
 
         private static HmiControlProperties properties = new HmiControlProperties("Border Properties");
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
-        public string ToXaml(int indentLevel, bool vs = false)
+        public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
@@ -173,11 +183,11 @@ namespace BuilderHMI.Lite
             return sb.ToString();
         }
 
-        public string ToXaml(int indentLevel, Dictionary<IHmiControl, List<IHmiControl>> groups, Thickness frame)
+        public string ToXaml(int indentLevel, bool eventHandlers, Dictionary<IHmiControl, List<IHmiControl>> groups, Thickness frame)
         {
             var groupChildren = groups[this];
             if (groupChildren.Count == 0)
-                return ToXaml(indentLevel, true);
+                return ToXaml(indentLevel, eventHandlers, true);
 
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
@@ -196,9 +206,9 @@ namespace BuilderHMI.Lite
                 var margin0 = control.fe.Margin;
                 MainWindow.Shift(control.fe, frame);
                 if (groups.ContainsKey(control))
-                    sb.AppendLine((control as IGroupHmiControl).ToXaml(indentLevel + 2, groups, frame));
+                    sb.AppendLine((control as IGroupHmiControl).ToXaml(indentLevel + 2, eventHandlers, groups, frame));
                 else
-                    sb.AppendLine(control.ToXaml(indentLevel + 2, true));
+                    sb.AppendLine(control.ToXaml(indentLevel + 2, eventHandlers, true));
                 control.fe.Margin = margin0;
             }
             for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
@@ -206,6 +216,10 @@ namespace BuilderHMI.Lite
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
             sb.Append("</Border>");
             return sb.ToString();
+        }
+
+        public void AppendCodeBehind(StringBuilder sb)
+        {
         }
     }
 
@@ -288,20 +302,26 @@ namespace BuilderHMI.Lite
         public string NamePrefix { get { return "image"; } }
         public Size InitialSize { get { return new Size(100, 100); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.Resize; } }
+        public bool IsEmpty { get { return false; } }
 
         private static HmiImageProperties properties = new HmiImageProperties();
         public UserControl PropertyPage { get { properties.TheImage = this; return properties; } }
 
-        public string ToXaml(int indentLevel, bool vs = false)
+        public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
             sb.Append(vs ? "<Image" : "<HmiImage");
             sb.AppendFormat(" Name=\"{0}\" Stretch=\"{1}\"", Name, Stretch);
-            if (ImageFile.Length > 0) sb.AppendFormat(vs ? " Source=\"Images/{0}\"" : " ImageFile=\"{0}\"", ImageFile);
+            if (!string.IsNullOrEmpty(ImageFile))
+                sb.AppendFormat(vs ? " Source=\"Images/{0}\"" : " ImageFile=\"{0}\"", ImageFile);
             OwnerPage.AppendLocationXaml(this, sb);
             sb.Append(" />");
             return sb.ToString();
+        }
+
+        public void AppendCodeBehind(StringBuilder sb)
+        {
         }
     }
 
@@ -324,11 +344,12 @@ namespace BuilderHMI.Lite
         public string NamePrefix { get { return "progress"; } }
         public Size InitialSize { get { return new Size(100, 30); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.Resize; } }
+        public bool IsEmpty { get { return false; } }
 
         private static HmiRangeBaseProperties properties = new HmiRangeBaseProperties("Progress Bar Properties");
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
-        public string ToXaml(int indentLevel, bool vs = false)
+        public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
@@ -339,6 +360,10 @@ namespace BuilderHMI.Lite
             OwnerPage.AppendLocationXaml(this, sb);
             sb.Append(" />");
             return sb.ToString();
+        }
+
+        public void AppendCodeBehind(StringBuilder sb)
+        {
         }
     }
 }

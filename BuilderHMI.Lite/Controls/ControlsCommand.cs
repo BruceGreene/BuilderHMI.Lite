@@ -4,7 +4,6 @@ using System.Net;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Media.Imaging;
 
 namespace BuilderHMI.Lite
@@ -106,11 +105,12 @@ namespace BuilderHMI.Lite
         public string NamePrefix { get { return "button"; } }
         public Size InitialSize { get { return new Size(100, 100); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.Resize; } }
+        public bool IsEmpty { get { return false; } }
 
         private static HmiButtonProperties properties = new HmiButtonProperties();
         public UserControl PropertyPage { get { properties.TheButton = this; return properties; } }
 
-        public string ToXaml(int indentLevel, bool vs = false)
+        public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
@@ -119,6 +119,8 @@ namespace BuilderHMI.Lite
             if (vs)
             {
                 sb.AppendFormat("<Button Style=\"{{DynamicResource ButtonStyle}}\" Name=\"{0}\"", Name);
+                if (eventHandlers)
+                    sb.AppendFormat(" Click=\"{0}{1}_Click\"", char.ToUpper(Name[0]), Name.Substring(1));
                 if (text.Length > 0 && ImageFile.Length > 0)
                 {
                     OwnerPage.AppendLocationXaml(this, sb);
@@ -161,6 +163,13 @@ namespace BuilderHMI.Lite
 
             return sb.ToString();
         }
+
+        public void AppendCodeBehind(StringBuilder sb)
+        {
+            sb.AppendFormat("\r\n        private void {0}{1}_Click(object sender, RoutedEventArgs e)\r\n", char.ToUpper(Name[0]), Name.Substring(1));
+            sb.AppendLine("        {");
+            sb.AppendLine("        }");
+        }
     }
 
     public class HmiTextBox : TextBox, IHmiControl
@@ -176,19 +185,30 @@ namespace BuilderHMI.Lite
         public string NamePrefix { get { return "box"; } }
         public Size InitialSize { get { return new Size(100, double.NaN); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.ResizeWidth; } }
+        public bool IsEmpty { get { return false; } }
 
         private static HmiControlProperties properties = new HmiControlProperties("Text Box Properties");
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
-        public string ToXaml(int indentLevel, bool vs = false)
+        public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
             sb.Append(vs ? "<TextBox Style=\"{DynamicResource TextBoxStyle}\"" : "<HmiTextBox");
             sb.AppendFormat(" Name=\"{0}\"", Name);
+            if (eventHandlers)
+                sb.AppendFormat(" TextChanged=\"{0}{1}_TextChanged\"", char.ToUpper(Name[0]), Name.Substring(1));
             OwnerPage.AppendLocationXaml(this, sb);
             sb.Append(" />");
             return sb.ToString();
+        }
+
+        public void AppendCodeBehind(StringBuilder sb)
+        {
+            sb.AppendFormat("\r\n        private void {0}{1}_TextChanged(object sender, TextChangedEventArgs e)\r\n", char.ToUpper(Name[0]), Name.Substring(1));
+            sb.AppendLine("        {");
+            sb.AppendFormat("            // {0}.Text\r\n", Name);
+            sb.AppendLine("        }");
         }
     }
 
@@ -211,11 +231,12 @@ namespace BuilderHMI.Lite
         public string NamePrefix { get { return "slider"; } }
         public Size InitialSize { get { return new Size(100, 30); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.Resize; } }
+        public bool IsEmpty { get { return false; } }
 
         private static HmiRangeBaseProperties properties = new HmiRangeBaseProperties("Slider Properties");
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
-        public string ToXaml(int indentLevel, bool vs = false)
+        public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
@@ -223,9 +244,19 @@ namespace BuilderHMI.Lite
             sb.AppendFormat(" Name=\"{0}\" Minimum=\"{1}\" Maximum=\"{2}\"", Name, Minimum, Maximum);
             if (vs && Height > Width)
                 sb.Append(" Orientation=\"Vertical\"");
+            if (eventHandlers)
+                sb.AppendFormat(" ValueChanged=\"{0}{1}_ValueChanged\"", char.ToUpper(Name[0]), Name.Substring(1));
             OwnerPage.AppendLocationXaml(this, sb);
             sb.Append(" />");
             return sb.ToString();
+        }
+
+        public void AppendCodeBehind(StringBuilder sb)
+        {
+            sb.AppendFormat("\r\n        private void {0}{1}_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)\r\n", char.ToUpper(Name[0]), Name.Substring(1));
+            sb.AppendLine("        {");
+            sb.AppendFormat("            // {0}.Value\r\n", Name);
+            sb.AppendLine("        }");
         }
     }
 
@@ -242,11 +273,12 @@ namespace BuilderHMI.Lite
         public string NamePrefix { get { return "link"; } }
         public Size InitialSize { get { return new Size(double.NaN, double.NaN); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.None; } }
+        public bool IsEmpty { get { return string.IsNullOrEmpty(Text); } }
 
         private static HmiTextBlockProperties properties = new HmiTextBlockProperties();
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
-        public string ToXaml(int indentLevel, bool vs = false)
+        public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
@@ -257,7 +289,10 @@ namespace BuilderHMI.Lite
                 OwnerPage.AppendLocationXaml(this, sb);
                 sb.AppendLine(">");
                 for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
-                sb.AppendLine("<Hyperlink>");
+                if (eventHandlers)
+                    sb.AppendFormat("<Hyperlink Click=\"{0}{1}_Click\">\r\n", char.ToUpper(Name[0]), Name.Substring(1));
+                else
+                    sb.AppendLine("<Hyperlink>");
                 for (int i = 0; i < indentLevel + 2; i++) sb.Append("    ");
                 sb.AppendLine(WebUtility.HtmlEncode(Text).Replace("\n", "&#10;"));
                 for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
@@ -273,6 +308,13 @@ namespace BuilderHMI.Lite
             }
 
             return sb.ToString();
+        }
+
+        public void AppendCodeBehind(StringBuilder sb)
+        {
+            sb.AppendFormat("\r\n        private void {0}{1}_Click(object sender, RoutedEventArgs e)\r\n", char.ToUpper(Name[0]), Name.Substring(1));
+            sb.AppendLine("        {");
+            sb.AppendLine("        }");
         }
     }
 }

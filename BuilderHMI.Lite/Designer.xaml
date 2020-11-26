@@ -236,6 +236,7 @@
                     <TextBlock Text="Title:" FontSize="14" Margin="0,0,12,0" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush2}" />
                     <TextBox Name="tbTitle" />
                 </DockPanel>
+                <CheckBox Name="cbEventHandlers" Content="Generate handlers for common events" FontSize="14" Margin="0,4,0,8" Foreground="{DynamicResource TextBrush2}" />
                 <Border Background="{DynamicResource ForeignBrush}" Margin="0,4,0,16">
                     <CheckBox Name="cbOpenInVS" Content="Open in Visual Studio" IsChecked="True" FontSize="14" Margin="4" HorizontalAlignment="Center"
                         Foreground="{DynamicResource TextBrush2}" />
@@ -255,12 +256,12 @@
             </StackPanel>
 
             <StackPanel Name="spHelp" Grid.Row="1" Width="270" Margin="16,0,8,4" Visibility="Hidden">
-                <TextBlock Text="• Left-drag to Move controls." Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
-                <TextBlock Text="• Right-drag to Size controls." Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
-                <TextBlock Text="• Arrow keys to nudge controls." Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
-                <TextBlock Text="• Ctrl+B to Back, Ctrl+F to Front." Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
-                <TextBlock Text="• Ctrl+X/C/V to Cut/Copy/Paste." Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
-                <TextBlock Text="• Ctrl+N to view XAML in Notepad." Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
+                <TextBlock Text="• Left-drag to Move controls" Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
+                <TextBlock Text="• Right-drag to Size controls" Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
+                <TextBlock Text="• Arrow keys to nudge controls" Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
+                <TextBlock Text="• Ctrl+B to Back, Ctrl+F to Front" Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
+                <TextBlock Text="• Ctrl+X/C/V to Cut/Copy/Paste" Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
+                <TextBlock Text="• Ctrl+W to open XAML Window" Margin="0,0,0,4" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush2}" />
             </StackPanel>
         </Grid>
     </Border>

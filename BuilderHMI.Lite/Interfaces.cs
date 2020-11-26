@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -26,12 +27,14 @@ namespace BuilderHMI.Lite
         Size InitialSize { get; }         // design size for new controls
         ECtrlFlags Flags { get; }
         UserControl PropertyPage { get; }
-        string ToXaml(int indentLevel, bool vs = false);
+        bool IsEmpty { get; }             // empty TextBlock, etc
+        string ToXaml(int indentLevel, bool eventHandlers, bool vs);
+        void AppendCodeBehind(StringBuilder sb);
     }
 
     public interface IGroupHmiControl : IHmiControl  // Border and GroupBox
     {
-        string ToXaml(int indentLevel, Dictionary<IHmiControl, List<IHmiControl>> groups, Thickness frame);
+        string ToXaml(int indentLevel, bool eventHandlers, Dictionary<IHmiControl, List<IHmiControl>> groups, Thickness frame);
     }
 
     public interface IHmiListControl : IHmiControl  // Listbox, DropdownList, Checkboxes and RadioButtons

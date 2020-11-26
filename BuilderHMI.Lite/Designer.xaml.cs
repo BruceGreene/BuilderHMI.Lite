@@ -101,11 +101,11 @@ namespace BuilderHMI.Lite
                 case "btnToBack": mainWindow.SelectedControlToBack(); break;
 
                 case "btnGenerateDotNetFrameworkProject":
-                    mainWindow.GenerateDotNetFrameworkProject(tbProjectName.Text, tbTitle.Text, cbOpenInVS.IsChecked == true);
+                    mainWindow.GenerateDotNetFrameworkProject(tbProjectName.Text, tbTitle.Text, cbEventHandlers.IsChecked == true, cbOpenInVS.IsChecked == true);
                     break;
 
                 case "btnGenerateDotNetCoreProject":
-                    mainWindow.GenerateDotNetCoreProject(tbProjectName.Text, tbTitle.Text, cbOpenInVS.IsChecked == true);
+                    mainWindow.GenerateDotNetCoreProject(tbProjectName.Text, tbTitle.Text, cbEventHandlers.IsChecked == true, cbOpenInVS.IsChecked == true);
                     break;
             }
         }
@@ -114,12 +114,10 @@ namespace BuilderHMI.Lite
         {
             if (mainWindow.SelectedControl != null)
             {
-                updatePageProperties = false;
                 cbHorizontalAlignment.IsEnabled = cbVerticalAlignment.IsEnabled = true;
                 // Disable Stretch alignment option for fixed size controls:
                 (cbHorizontalAlignment.Items[3] as ComboBoxItem).IsEnabled = ((mainWindow.SelectedControl.Flags & ECtrlFlags.ResizeWidth) > 0);
                 (cbVerticalAlignment.Items[3] as ComboBoxItem).IsEnabled = ((mainWindow.SelectedControl.Flags & ECtrlFlags.ResizeHeight) > 0);
-                updatePageProperties = true;
                 UpdateLocation();
                 btnCut.IsEnabled = btnCopy.IsEnabled = btnDelete.IsEnabled = btnToFront.IsEnabled = btnToBack.IsEnabled = true;
             }
@@ -191,10 +189,7 @@ namespace BuilderHMI.Lite
         private void Align_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (updatePageProperties && mainWindow.SelectedControl != null)
-            {
-                mainWindow.SetAlignment(mainWindow.SelectedControl, 
-                    (HorizontalAlignment)cbHorizontalAlignment.SelectedIndex, (VerticalAlignment)cbVerticalAlignment.SelectedIndex);
-            }
+                mainWindow.SetSelectedControlAlignment((HorizontalAlignment)cbHorizontalAlignment.SelectedIndex, (VerticalAlignment)cbVerticalAlignment.SelectedIndex);
         }
 
         private bool updatePageProperties = false;

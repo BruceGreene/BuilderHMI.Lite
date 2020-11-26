@@ -52,11 +52,12 @@ namespace BuilderHMI.Lite
         public string NamePrefix { get { return "listbox"; } }
         public Size InitialSize { get { return new Size(100, 100); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.Resize; } }
+        public bool IsEmpty { get { return false; } }
 
         private static HmiItemsProperties properties = new HmiItemsProperties("List Box Properties");
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
-        public string ToXaml(int indentLevel, bool vs = false)
+        public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
@@ -64,6 +65,8 @@ namespace BuilderHMI.Lite
             if (vs)
             {
                 sb.AppendFormat("<ListBox Style=\"{{DynamicResource ListBoxStyle}}\" Name=\"{0}\"", Name);
+                if (eventHandlers)
+                    sb.AppendFormat(" SelectionChanged=\"{0}{1}_SelectionChanged\"", char.ToUpper(Name[0]), Name.Substring(1));
                 OwnerPage.AppendLocationXaml(this, sb);
                 sb.AppendLine(">");
                 string[] labels = Elements.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
@@ -84,6 +87,14 @@ namespace BuilderHMI.Lite
             }
 
             return sb.ToString();
+        }
+
+        public void AppendCodeBehind(StringBuilder sb)
+        {
+            sb.AppendFormat("\r\n        private void {0}{1}_SelectionChanged(object sender, SelectionChangedEventArgs e)\r\n", char.ToUpper(Name[0]), Name.Substring(1));
+            sb.AppendLine("        {");
+            sb.AppendFormat("            // {0}.SelectedIndex\r\n", Name);
+            sb.AppendLine("        }");
         }
     }
 
@@ -131,11 +142,12 @@ namespace BuilderHMI.Lite
         public string NamePrefix { get { return "dropdown"; } }
         public Size InitialSize { get { return new Size(100, double.NaN); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.ResizeWidth; } }
+        public bool IsEmpty { get { return false; } }
 
         private static HmiItemsProperties properties = new HmiItemsProperties("Dropdown List Properties");
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
-        public string ToXaml(int indentLevel, bool vs = false)
+        public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
@@ -143,6 +155,8 @@ namespace BuilderHMI.Lite
             if (vs)
             {
                 sb.AppendFormat("<ComboBox Style=\"{{DynamicResource ComboBoxStyle}}\" Name=\"{0}\"", Name);
+                if (eventHandlers)
+                    sb.AppendFormat(" SelectionChanged=\"{0}{1}_SelectionChanged\"", char.ToUpper(Name[0]), Name.Substring(1));
                 OwnerPage.AppendLocationXaml(this, sb);
                 sb.AppendLine(">");
                 string[] labels = Elements.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
@@ -164,6 +178,14 @@ namespace BuilderHMI.Lite
 
             return sb.ToString();
         }
+
+        public void AppendCodeBehind(StringBuilder sb)
+        {
+            sb.AppendFormat("\r\n        private void {0}{1}_SelectionChanged(object sender, SelectionChangedEventArgs e)\r\n", char.ToUpper(Name[0]), Name.Substring(1));
+            sb.AppendLine("        {");
+            sb.AppendFormat("            // {0}.SelectedIndex\r\n", Name);
+            sb.AppendLine("        }");
+        }
     }
 
     public class HmiCheckBoxes : StackPanel, IHmiListControl
@@ -171,11 +193,9 @@ namespace BuilderHMI.Lite
         public HmiCheckBoxes()
         {
             Background = Brushes.Transparent;
+            MinWidth = MinHeight = 10;
             Elements = "OPTION 1|OPTION 2";
-            Value = 0;
         }
-
-        public int Value { get; private set; }
 
         public static readonly DependencyProperty ElementsProperty =
             DependencyProperty.Register("Elements", typeof(string), typeof(HmiCheckBoxes), new FrameworkPropertyMetadata("", OnElementsChanged));
@@ -197,14 +217,11 @@ namespace BuilderHMI.Lite
             string[] labels = items.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string label in labels)
             {
-                if (label.Length > 0)
-                {
-                    var cb = new CheckBox();
-                    cb.SetResourceReference(StyleProperty, "CheckBoxStyle");
-                    cb.Content = label;
-                    if (Children.Add(cb) >= 30)
-                        break;
-                }
+                var cb = new CheckBox();
+                cb.SetResourceReference(StyleProperty, "CheckBoxStyle");
+                cb.Content = label;
+                if (Children.Add(cb) >= 30)
+                    break;
             }
         }
 
@@ -213,38 +230,50 @@ namespace BuilderHMI.Lite
         public string NamePrefix { get { return "check"; } }
         public Size InitialSize { get { return new Size(double.NaN, double.NaN); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.None; } }
+        public bool IsEmpty { get { return string.IsNullOrEmpty(Elements); } }
 
         private static HmiItemsProperties properties = new HmiItemsProperties("Checkbox Group Properties");
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
-        public string ToXaml(int indentLevel, bool vs = false)
+        public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
 
             if (vs)
             {
-                sb.AppendFormat("<StackPanel Name=\"{0}\"", Name);
+                sb.Append("<StackPanel");
                 OwnerPage.AppendLocationXaml(this, sb);
                 sb.AppendLine(">");
+                int index = 0;
                 string[] labels = Elements.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (string label in labels)
                 {
                     for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
-                    sb.AppendFormat("<CheckBox Style=\"{{DynamicResource CheckBoxStyle}}\" Content=\"{0}\" />\r\n", label);
+                    sb.AppendFormat("<CheckBox Style=\"{{DynamicResource CheckBoxStyle}}\" Name=\"{0}_box{1}\" Content=\"{2}\"", Name, ++index, label);
+                    if (eventHandlers)
+                        sb.AppendFormat(" Checked=\"{0}{1}_Checked\" Unchecked=\"{0}{1}_Checked\"", char.ToUpper(Name[0]), Name.Substring(1));
+                    sb.AppendLine(" />");
                 }
                 for (int i = 0; i < indentLevel; i++) sb.Append("    ");
                 sb.Append("</StackPanel>");
             }
             else
             {
-                sb.AppendFormat("<HmiCheckBoxes Name=\"{0}\"", Name);
-                if (Elements.Length > 0) sb.AppendFormat(" Elements=\"{0}\"", Elements);
+                sb.AppendFormat("<HmiCheckBoxes Name=\"{0}\" Elements=\"{1}\"", Name, Elements);
                 OwnerPage.AppendLocationXaml(this, sb);
                 sb.Append(" />");
             }
 
             return sb.ToString();
+        }
+
+        public void AppendCodeBehind(StringBuilder sb)
+        {
+            sb.AppendFormat("\r\n        private void {0}{1}_Checked(object sender, RoutedEventArgs e)\r\n", char.ToUpper(Name[0]), Name.Substring(1));
+            sb.AppendLine("        {");
+            sb.AppendFormat("            // if ({0}_box1.IsChecked == true) {{ }}\r\n", Name);
+            sb.AppendLine("        }");
         }
     }
 
@@ -253,11 +282,9 @@ namespace BuilderHMI.Lite
         public HmiRadioButtons()
         {
             Background = Brushes.Transparent;
+            MinWidth = MinHeight = 10;
             Elements = "OPTION 1|OPTION 2";
-            Value = -1;
         }
-
-        public int Value { get; private set; }
 
         public static readonly DependencyProperty ElementsProperty =
             DependencyProperty.Register("Elements", typeof(string), typeof(HmiRadioButtons), new FrameworkPropertyMetadata("", OnElementsChanged));
@@ -279,13 +306,10 @@ namespace BuilderHMI.Lite
             string[] labels = items.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string label in labels)
             {
-                if (label.Length > 0)
-                {
-                    var rb = new RadioButton();
-                    rb.SetResourceReference(StyleProperty, "RadioButtonStyle");
-                    rb.Content = label;
-                    Children.Add(rb);
-                }
+                var rb = new RadioButton();
+                rb.SetResourceReference(StyleProperty, "RadioButtonStyle");
+                rb.Content = label;
+                Children.Add(rb);
             }
         }
 
@@ -294,38 +318,50 @@ namespace BuilderHMI.Lite
         public string NamePrefix { get { return "radio"; } }
         public Size InitialSize { get { return new Size(double.NaN, double.NaN); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.None; } }
+        public bool IsEmpty { get { return string.IsNullOrEmpty(Elements); } }
 
         private static HmiItemsProperties properties = new HmiItemsProperties("Radio Button Group Properties");
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
-        public string ToXaml(int indentLevel, bool vs = false)
+        public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
 
             if (vs)
             {
-                sb.AppendFormat("<StackPanel Name=\"{0}\"", Name);
+                sb.Append("<StackPanel");
                 OwnerPage.AppendLocationXaml(this, sb);
                 sb.AppendLine(">");
+                int index = 0;
                 string[] labels = Elements.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (string label in labels)
                 {
                     for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
-                    sb.AppendFormat("<RadioButton Style=\"{{DynamicResource RadioButtonStyle}}\" Content=\"{0}\" />\r\n", label);
+                    sb.AppendFormat("<RadioButton Style=\"{{DynamicResource RadioButtonStyle}}\" Name=\"{0}_button{1}\" Content=\"{2}\"", Name, ++index, label);
+                    if (eventHandlers)
+                        sb.AppendFormat(" Checked=\"{0}{1}_Checked\"", char.ToUpper(Name[0]), Name.Substring(1));
+                    sb.AppendLine(" />");
                 }
                 for (int i = 0; i < indentLevel; i++) sb.Append("    ");
                 sb.Append("</StackPanel>");
             }
             else
             {
-                sb.AppendFormat("<HmiRadioButtons Name=\"{0}\"", Name);
-                if (Elements.Length > 0) sb.AppendFormat(" Elements=\"{0}\"", Elements);
+                sb.AppendFormat("<HmiRadioButtons Name=\"{0}\" Elements=\"{1}\"", Name, Elements);
                 OwnerPage.AppendLocationXaml(this, sb);
                 sb.Append(" />");
             }
 
             return sb.ToString();
+        }
+
+        public void AppendCodeBehind(StringBuilder sb)
+        {
+            sb.AppendFormat("\r\n        private void {0}{1}_Checked(object sender, RoutedEventArgs e)\r\n", char.ToUpper(Name[0]), Name.Substring(1));
+            sb.AppendLine("        {");
+            sb.AppendFormat("            // if ({0}_button1.IsChecked == true) {{ }}\r\n", Name);
+            sb.AppendLine("        }");
         }
     }
 
@@ -381,11 +417,12 @@ namespace BuilderHMI.Lite
         public string NamePrefix { get { return "tree"; } }
         public Size InitialSize { get { return new Size(100, 100); } }
         public ECtrlFlags Flags { get { return ECtrlFlags.Resize; } }
+        public bool IsEmpty { get { return false; } }
 
         private static HmiItemsProperties properties = new HmiItemsProperties("Tree View Properties", "Double pipe \"||\" before top-level items.");
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
-        public string ToXaml(int indentLevel, bool vs = false)
+        public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
@@ -393,6 +430,8 @@ namespace BuilderHMI.Lite
             if (vs)
             {
                 sb.AppendFormat("<TreeView Style=\"{{DynamicResource TreeViewStyle}}\" Name=\"{0}\"", Name);
+                if (eventHandlers)
+                    sb.AppendFormat(" SelectedItemChanged=\"{0}{1}_SelectedItemChanged\"", char.ToUpper(Name[0]), Name.Substring(1));
                 OwnerPage.AppendLocationXaml(this, sb);
                 sb.AppendLine(">");
                 bool subitem = false;
@@ -438,6 +477,14 @@ namespace BuilderHMI.Lite
             }
 
             return sb.ToString();
+        }
+
+        public void AppendCodeBehind(StringBuilder sb)
+        {
+            sb.AppendFormat("\r\n        private void {0}{1}_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)\r\n", char.ToUpper(Name[0]), Name.Substring(1));
+            sb.AppendLine("        {");
+            sb.AppendFormat("            // if ({0}.SelectedItem is TreeViewItem item) {{ }}\r\n", Name);
+            sb.AppendLine("        }");
         }
     }
 }

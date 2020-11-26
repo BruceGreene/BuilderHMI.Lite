@@ -14,5 +14,6 @@ namespace __PROJECT_NAME__
         {
             InitializeComponent();
         }
+__EVENT_HANDLERS__
     }
 }
