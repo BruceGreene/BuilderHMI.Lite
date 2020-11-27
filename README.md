@@ -14,8 +14,9 @@ Add your own MVVM bindings, event handlers, etc to complete the app.
 ### CodeProject Article
 https://www.codeproject.com/Articles/5283954/BuilderHMI-Lite-Simple-Drag-and-Drop-WPF-Layout
 
-### YouTube Introductory Video
-https://youtu.be/xgmCmU76PFQ
+### YouTube Videos
+Pet Project: https://youtu.be/4pHF73r7CjA
+Introduction: https://youtu.be/xgmCmU76PFQ
 
 ### Features
 - Support for the majority of the common WPF control types
