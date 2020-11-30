@@ -370,7 +370,7 @@ namespace BuilderHMI.Lite
         public HmiTreeView()
         {
             Focusable = false;
-            Elements = "Item 1|Item 2|Item 3||Item 4|Item 5";
+            Elements = "Item 1|Item 2||Item 2a||Item 2b|||Item 2b1||Item 2c|Item 3";
             SetResourceReference(StyleProperty, "TreeViewStyle");
         }
 
@@ -391,8 +391,9 @@ namespace BuilderHMI.Lite
         private void CreateItems(string elements)
         {
             Items.Clear();
-            ItemCollection items = Items;
-            string[] labels = elements.Split('|');  // "Item 1|Item 2|Item 3||Item 4|Item 5"
+            ItemsControl node = this;  // node is either the tree view or the last item added
+            int nodeLevel = 0, node2Level = 1;  // level 0 is the tree view, level 1 is an item on the trunk
+            string[] labels = elements.Split('|');  // "Item 1|Item 2||Item 2a||Item 2b|||Item 2b1"
             foreach (string label in labels)
             {
                 if (label.Length > 0)
@@ -401,13 +402,21 @@ namespace BuilderHMI.Lite
                     tvi.SetResourceReference(StyleProperty, "TreeViewItemStyle");
                     tvi.Header = label;
                     tvi.IsExpanded = true;
-                    items.Add(tvi);
-                    if (items == Items)
-                        items = tvi.Items;
+
+                    while (nodeLevel >= node2Level)
+                    {
+                        node = ItemsControlFromItemContainer(node);
+                        --nodeLevel;
+                    }
+
+                    node.Items.Add(tvi);
+                    node = tvi;
+                    ++nodeLevel;
+                    node2Level = 1;
                 }
-                else
+                else  // double-pipe
                 {
-                    items = Items;
+                    ++node2Level;
                 }
             }
         }
@@ -419,7 +428,7 @@ namespace BuilderHMI.Lite
         public ECtrlFlags Flags { get { return ECtrlFlags.Resize; } }
         public bool IsEmpty { get { return false; } }
 
-        private static HmiItemsProperties properties = new HmiItemsProperties("Tree View Properties", "Double pipe \"||\" before top-level items.");
+        private static HmiItemsProperties properties = new HmiItemsProperties("Tree View Properties", "Double pipe \"||\" for level 2 items, etc.");
         public UserControl PropertyPage { get { properties.TheControl = this; return properties; } }
 
         public string ToXaml(int indentLevel, bool eventHandlers, bool vs)
@@ -434,37 +443,40 @@ namespace BuilderHMI.Lite
                     sb.AppendFormat(" SelectedItemChanged=\"{0}{1}_SelectedItemChanged\"", char.ToUpper(Name[0]), Name.Substring(1));
                 OwnerPage.AppendLocationXaml(this, sb);
                 sb.AppendLine(">");
-                bool subitem = false;
+
+                bool close = false;
+                int nodeLevel = 1, node2Level = 1;
                 string[] labels = Elements.Split('|');
                 foreach (string label in labels)
                 {
                     if (label.Length > 0)
                     {
-                        if (subitem)
+                        node2Level = Math.Min(node2Level, nodeLevel + 1);
+                        while (close && nodeLevel >= node2Level)
                         {
-                            for (int i = 0; i < indentLevel + 2; i++) sb.Append("    ");
-                            sb.AppendFormat("<TreeViewItem Style=\"{{DynamicResource TreeViewItemStyle}}\" Header=\"{0}\" />\r\n", label);
+                            for (int i = 0; i < indentLevel + nodeLevel; i++) sb.Append("    ");
+                            sb.AppendLine("</TreeViewItem>");
+                            --nodeLevel;
                         }
-                        else
-                        {
-                            for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
-                            sb.AppendFormat("<TreeViewItem Style=\"{{DynamicResource TreeViewItemStyle}}\" Header=\"{0}\">\r\n", label);
-                            subitem = true;
-                        }
+                        nodeLevel = node2Level;
+                        for (int i = 0; i < indentLevel + nodeLevel; i++) sb.Append("    ");
+                        sb.AppendFormat("<TreeViewItem Style=\"{{DynamicResource TreeViewItemStyle}}\" Header=\"{0}\">\r\n", label);
+                        close = true;
+                        node2Level = 1;
                     }
-                    else if (subitem)
+                    else  // double-pipe
                     {
-                        for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
-                        sb.AppendLine("</TreeViewItem>");
-                        subitem = false;
+                        ++node2Level;
                     }
                 }
 
-                if (subitem)
+                while (close && nodeLevel >= 1)
                 {
-                    for (int i = 0; i < indentLevel + 1; i++) sb.Append("    ");
+                    for (int i = 0; i < indentLevel + nodeLevel; i++) sb.Append("    ");
                     sb.AppendLine("</TreeViewItem>");
+                    --nodeLevel;
                 }
+
                 for (int i = 0; i < indentLevel; i++) sb.Append("    ");
                 sb.Append("</TreeView>");
             }
