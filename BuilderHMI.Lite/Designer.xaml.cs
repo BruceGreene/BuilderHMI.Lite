@@ -222,5 +222,27 @@ namespace BuilderHMI.Lite
                     tbProjectPath.Text = "(no file selected)";
             }
         }
+
+        private bool inMouseMove = false;
+        private int counterMouseMove = 0;
+
+        private void Button_MouseEnter(object sender, MouseEventArgs e)
+        {
+            counterMouseMove = 0;
+        }
+
+        private void Button_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (!inMouseMove && e.LeftButton == MouseButtonState.Pressed && sender is Button button)
+            {
+                inMouseMove = true;
+                if (++counterMouseMove > 3)  // allow small movements before drag is initiated
+                {
+                    DragDrop.DoDragDrop(button, button.Name, DragDropEffects.Copy);
+                    counterMouseMove = 0;
+                }
+                inMouseMove = false;
+            }
+        }
     }
 }

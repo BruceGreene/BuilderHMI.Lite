@@ -88,85 +88,85 @@
 
                 <TextBlock Text="Add controls:" FontSize="14" Grid.Row="0" Margin="0,0,0,8" Foreground="{DynamicResource TextBrush2}" />
                 <WrapPanel Name="wpAdd" Grid.Row="1" Orientation="Vertical">
-                    <Button Name="btnGroupBox" HorizontalAlignment="Left" Margin="0,0,8,0">
+                    <Button Name="btnGroupBox" HorizontalAlignment="Left" Margin="0,0,8,0" MouseEnter="Button_MouseEnter" PreviewMouseMove="Button_PreviewMouseMove">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_group.png" Height="24" Stretch="None" />
                             <TextBlock Text="Group Box" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
-                    <Button Name="btnBorder" HorizontalAlignment="Left" Margin="0,0,8,0">
+                    <Button Name="btnBorder" HorizontalAlignment="Left" Margin="0,0,8,0" MouseEnter="Button_MouseEnter" PreviewMouseMove="Button_PreviewMouseMove">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_border.png" Height="24" Stretch="None" />
                             <TextBlock Text="Border" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
-                    <Button Name="btnImage" HorizontalAlignment="Left" Margin="0,0,8,0">
+                    <Button Name="btnImage" HorizontalAlignment="Left" Margin="0,0,8,0" MouseEnter="Button_MouseEnter" PreviewMouseMove="Button_PreviewMouseMove">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_image.png" Height="24" Stretch="None" />
                             <TextBlock Text="Image" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
-                    <Button Name="btnTextBlock" HorizontalAlignment="Left" Margin="0,0,8,0">
+                    <Button Name="btnTextBlock" HorizontalAlignment="Left" Margin="0,0,8,0" MouseEnter="Button_MouseEnter" PreviewMouseMove="Button_PreviewMouseMove">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_text_block.png" Height="24" Stretch="None" />
                             <TextBlock Text="Text Block" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
-                    <Button Name="btnButton" HorizontalAlignment="Left" Margin="0,0,8,0">
+                    <Button Name="btnButton" HorizontalAlignment="Left" Margin="0,0,8,0" MouseEnter="Button_MouseEnter" PreviewMouseMove="Button_PreviewMouseMove">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_button.png" Height="24" Stretch="None" />
                             <TextBlock Text="Button" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
-                    <Button Name="btnTextBox" HorizontalAlignment="Left" Margin="0,0,8,0">
+                    <Button Name="btnTextBox" HorizontalAlignment="Left" Margin="0,0,8,0" MouseEnter="Button_MouseEnter" PreviewMouseMove="Button_PreviewMouseMove">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_text_box.png" Height="24" Stretch="None" />
                             <TextBlock Text="Text Box" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
-                    <Button Name="btnSlider" HorizontalAlignment="Left" Margin="0,0,8,0">
+                    <Button Name="btnSlider" HorizontalAlignment="Left" Margin="0,0,8,0" MouseEnter="Button_MouseEnter" PreviewMouseMove="Button_PreviewMouseMove">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_slider.png" Height="24" Stretch="None" />
                             <TextBlock Text="Slider" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
-                    <Button Name="btnHyperlink" HorizontalAlignment="Left" Margin="0,0,8,0">
+                    <Button Name="btnHyperlink" HorizontalAlignment="Left" Margin="0,0,8,0" MouseEnter="Button_MouseEnter" PreviewMouseMove="Button_PreviewMouseMove">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_link.png" Height="24" Stretch="None" />
                             <TextBlock Text="Hyperlink" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
-                    <Button Name="btnProgressBar" HorizontalAlignment="Left" Margin="0,0,8,0">
+                    <Button Name="btnProgressBar" HorizontalAlignment="Left" Margin="0,0,8,0" MouseEnter="Button_MouseEnter" PreviewMouseMove="Button_PreviewMouseMove">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_progress.png" Height="24" Stretch="None" />
                             <TextBlock Text="Progress Bar" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
-                    <Button Name="btnListBox" HorizontalAlignment="Left" Margin="0,0,8,0">
+                    <Button Name="btnListBox" HorizontalAlignment="Left" Margin="0,0,8,0" MouseEnter="Button_MouseEnter" PreviewMouseMove="Button_PreviewMouseMove">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_listbox.png" Height="24" Stretch="None" />
                             <TextBlock Text="List Box" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
-                    <Button Name="btnDropdownList" HorizontalAlignment="Left" Margin="0,0,8,0">
+                    <Button Name="btnDropdownList" HorizontalAlignment="Left" Margin="0,0,8,0" MouseEnter="Button_MouseEnter" PreviewMouseMove="Button_PreviewMouseMove">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_dropdown.png" Height="24" Stretch="None" />
                             <TextBlock Text="Dropdown List" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
-                    <Button Name="btnCheckBoxes" HorizontalAlignment="Left" Margin="0,0,8,0">
+                    <Button Name="btnCheckBoxes" HorizontalAlignment="Left" Margin="0,0,8,0" MouseEnter="Button_MouseEnter" PreviewMouseMove="Button_PreviewMouseMove">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_check.png" Height="24" Stretch="None" />
                             <TextBlock Text="Check Boxes" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
-                    <Button Name="btnRadioButtons" HorizontalAlignment="Left" Margin="0,0,8,0">
+                    <Button Name="btnRadioButtons" HorizontalAlignment="Left" Margin="0,0,8,0" MouseEnter="Button_MouseEnter" PreviewMouseMove="Button_PreviewMouseMove">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_radio.png" Height="24" Stretch="None" />
                             <TextBlock Text="Radio Buttons" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
-                    <Button Name="btnTreeView" HorizontalAlignment="Left" Margin="0,0,8,0">
+                    <Button Name="btnTreeView" HorizontalAlignment="Left" Margin="0,0,8,0" MouseEnter="Button_MouseEnter" PreviewMouseMove="Button_PreviewMouseMove">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="Images/control_tree.png" Height="24" Stretch="None" />
                             <TextBlock Text="Tree View" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />

@@ -414,7 +414,7 @@ namespace BuilderHMI.Lite
         }
         #endregion Move and Size
 
-        public void AddNew<T>() where T : IHmiControl, new()
+        public void AddNew<T>(double leftShift = pixelOffset, double topShift = pixelOffset) where T : IHmiControl, new()
         {
             IHmiControl control = new T();
             SelectedControl = null;
@@ -422,7 +422,7 @@ namespace BuilderHMI.Lite
             control.fe.VerticalAlignment = VerticalAlignment.Top;
             control.fe.Width = control.InitialSize.Width;
             control.fe.Height = control.InitialSize.Height;
-            AddToCanvas(control, pixelOffset, pixelOffset);
+            AddToCanvas(control, leftShift, topShift);
             control.fe.SizeChanged += OnAddNewSizeChanged;
             UpdateXamlWindow();
         }
@@ -434,6 +434,35 @@ namespace BuilderHMI.Lite
             {
                 control.fe.SizeChanged -= OnAddNewSizeChanged;  // one-shot
                 SelectedControl = control;
+            }
+        }
+
+        private void OnDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.Text))
+            {
+                string buttonName = (string)e.Data.GetData(DataFormats.Text);
+                Point pos = e.GetPosition(gridCanvas);
+                double left = Math.Round(pos.X / GridSize) * GridSize;  // snap to grid
+                double top = Math.Round(pos.Y / GridSize) * GridSize;
+
+                switch (buttonName)
+                {
+                    case "btnGroupBox": AddNew<HmiGroupBox>(left, top); break;
+                    case "btnBorder": AddNew<HmiBorder>(left, top); break;
+                    case "btnImage": AddNew<HmiImage>(left, top); break;
+                    case "btnTextBlock": AddNew<HmiTextBlock>(left, top); break;
+                    case "btnButton": AddNew<HmiButton>(left, top); break;
+                    case "btnTextBox": AddNew<HmiTextBox>(left, top); break;
+                    case "btnSlider": AddNew<HmiSlider>(left, top); break;
+                    case "btnHyperlink": AddNew<HmiHyperlink>(left, top); break;
+                    case "btnProgressBar": AddNew<HmiProgressBar>(left, top); break;
+                    case "btnListBox": AddNew<HmiListBox>(left, top); break;
+                    case "btnDropdownList": AddNew<HmiDropdownList>(left, top); break;
+                    case "btnCheckBoxes": AddNew<HmiCheckBoxes>(left, top); break;
+                    case "btnRadioButtons": AddNew<HmiRadioButtons>(left, top); break;
+                    case "btnTreeView": AddNew<HmiTreeView>(left, top); break;
+                }
             }
         }
 
