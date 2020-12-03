@@ -108,31 +108,42 @@ namespace BuilderHMI.Lite
             control.fe.Margin = new Thickness(left, top, right, bottom);
         }
 
-        public void Move(Size sizeCanvas, ref double dx, ref double dy)
+        public bool Move(Size sizeCanvas, ref double dx, ref double dy)
         {
-            if (dx == 0 && dy == 0) return;
+            if (dx == 0 && dy == 0) return false;
 
-            double left = 0, top = 0, right = 0, bottom = 0;
+            var alignH = control.fe.HorizontalAlignment;
+            var alignV = control.fe.VerticalAlignment;
+            double left = 0, top = 0, right = 0, bottom = 0, limit;
             switch (control.fe.HorizontalAlignment)
             {
                 case HorizontalAlignment.Left:
                     left = Math.Max(width1 + dx, 0);
                     left = Math.Round(left / MainWindow.GridSize) * MainWindow.GridSize;  // snap to grid
-                    left = Math.Min(left, (int)(sizeCanvas.Width - control.fe.ActualWidth + 0.5));
+                    limit = Math.Round(sizeCanvas.Width - control.fe.ActualWidth);
+                    if (left > limit) alignH = HorizontalAlignment.Right;  // Left -> Right gesture
+                    left = Math.Min(left, limit);
                     dx = left - width1;
                     break;
 
                 case HorizontalAlignment.Center:
-                    left = Math.Max(width1 + 2 * dx, control.fe.ActualWidth - sizeCanvas.Width);
+                    left = width1 + 2 * dx;
+                    limit = control.fe.ActualWidth - sizeCanvas.Width;
+                    if (left < limit) alignH = HorizontalAlignment.Left;  // Center -> Left gesture
+                    left = Math.Max(left, limit);
                     left = Math.Round(left / MainWindow.GridSize) * MainWindow.GridSize;  // snap to grid
-                    left = Math.Min(left, (int)(sizeCanvas.Width - control.fe.ActualWidth + 0.5));
+                    limit = Math.Round(sizeCanvas.Width - control.fe.ActualWidth);
+                    if (left > limit) alignH = HorizontalAlignment.Right;  // Center -> Right gesture
+                    left = Math.Min(left, limit);
                     dx = (left - width1) / 2;
                     break;
 
                 case HorizontalAlignment.Right:
                     right = Math.Max(width2 - dx, 0);
                     right = Math.Round(right / MainWindow.GridSize) * MainWindow.GridSize;  // snap to grid
-                    right = Math.Min(right, (int)(sizeCanvas.Width - control.fe.ActualWidth + 0.5));
+                    limit = Math.Round(sizeCanvas.Width - control.fe.ActualWidth);
+                    if (right > limit) alignH = HorizontalAlignment.Left;  // Right -> Left gesture
+                    right = Math.Min(right, limit);
                     dx = width2 - right;
                     break;
 
@@ -154,21 +165,30 @@ namespace BuilderHMI.Lite
                 case VerticalAlignment.Top:
                     top = Math.Max(height1 + dy, 0);
                     top = Math.Round(top / MainWindow.GridSize) * MainWindow.GridSize;  // snap to grid
-                    top = Math.Min(top, (int)(sizeCanvas.Height - control.fe.ActualHeight + 0.5));
+                    limit = Math.Round(sizeCanvas.Height - control.fe.ActualHeight);
+                    if (top > limit) alignV = VerticalAlignment.Bottom;  // Top -> Bottom gesture
+                    top = Math.Min(top, limit);
                     dy = top - height1;
                     break;
 
                 case VerticalAlignment.Center:
-                    top = Math.Max(height1 + 2 * dy, control.fe.ActualHeight - sizeCanvas.Height);
+                    top = height1 + 2 * dy;
+                    limit = control.fe.ActualHeight - sizeCanvas.Height;
+                    if (top < limit) alignV = VerticalAlignment.Top;  // Center -> Top gesture
+                    top = Math.Max(top, limit);
                     top = Math.Round(top / MainWindow.GridSize) * MainWindow.GridSize;  // snap to grid
-                    top = Math.Min(top, (int)(sizeCanvas.Height - control.fe.ActualHeight + 0.5));
+                    limit = Math.Round(sizeCanvas.Height - control.fe.ActualHeight);
+                    if (top > limit) alignV = VerticalAlignment.Bottom;  // Center -> Bottom gesture
+                    top = Math.Min(top, limit);
                     dy = (top - height1) / 2;
                     break;
 
                 case VerticalAlignment.Bottom:
                     bottom = Math.Max(height2 - dy, 0);
                     bottom = Math.Round(bottom / MainWindow.GridSize) * MainWindow.GridSize;  // snap to grid
-                    bottom = Math.Min(bottom, (int)(sizeCanvas.Height - control.fe.ActualHeight + 0.5));
+                    limit = Math.Round(sizeCanvas.Height - control.fe.ActualHeight);
+                    if (bottom > limit) alignV = VerticalAlignment.Top;  // Bottom -> Top gesture
+                    bottom = Math.Min(bottom, limit);
                     dy = height2 - bottom;
                     break;
 
@@ -184,16 +204,25 @@ namespace BuilderHMI.Lite
                     dy = top - height1;
                     break;
             }
+
             control.fe.Margin = new Thickness(left, top, right, bottom);
+            if (alignH != control.fe.HorizontalAlignment || alignV != control.fe.VerticalAlignment)
+            {
+                MainWindow.SetControlAlignment(control, sizeCanvas, alignH, alignV);
+                return true;
+            }
+            return false;
         }
 
-        public void Size(Size sizeCanvas, ref double dx, ref double dy)
+        public bool Size(Size sizeCanvas, ref double dx, ref double dy)
         {
             if ((control.Flags & ECtrlFlags.ResizeWidth) == 0) dx = 0;
             if ((control.Flags & ECtrlFlags.ResizeHeight) == 0) dy = 0;
-            if (dx == 0 && dy == 0) return;
+            if (dx == 0 && dy == 0) return false;
 
-            double left = 0, top = 0, right = 0, bottom = 0, width, height;
+            var alignH = control.fe.HorizontalAlignment;
+            var alignV = control.fe.VerticalAlignment;
+            double left = 0, top = 0, right = 0, bottom = 0, width, height, limit;
             switch (control.fe.HorizontalAlignment)
             {
                 case HorizontalAlignment.Left:
@@ -201,7 +230,9 @@ namespace BuilderHMI.Lite
                     width = width2 + dx;
                     width = Math.Round(width / MainWindow.GridSize) * MainWindow.GridSize;  // snap to grid
                     width = Math.Max(width, control.fe.MinWidth);
-                    width = Math.Min(width, (int)(sizeCanvas.Width - left + 0.5));
+                    limit = Math.Round(sizeCanvas.Width - left);
+                    if (width > limit) alignH = HorizontalAlignment.Stretch;  // Left -> Stretch gesture
+                    width = Math.Min(width, limit);
                     control.fe.Width = width;
                     dx = width - width2;
                     break;
@@ -213,7 +244,7 @@ namespace BuilderHMI.Lite
                     width = Math.Max(width, control.fe.MinWidth);
                     control.fe.Width = width;
                     dx = width - width2;
-                    left = Math.Min(left + dx, (int)(sizeCanvas.Width - control.fe.ActualWidth + 0.5));
+                    left = Math.Min(left + dx, Math.Round(sizeCanvas.Width - control.fe.ActualWidth));
                     break;
 
                 case HorizontalAlignment.Right:
@@ -240,7 +271,9 @@ namespace BuilderHMI.Lite
                     height = height2 + dy;
                     height = Math.Round(height / MainWindow.GridSize) * MainWindow.GridSize;  // snap to grid
                     height = Math.Max(height, control.fe.MinHeight);
-                    height = Math.Min(height, (int)(sizeCanvas.Height - top + 0.5));
+                    limit = Math.Round(sizeCanvas.Height - top);
+                    if (height > limit) alignV = VerticalAlignment.Stretch;  // Top -> Stretch gesture
+                    height = Math.Min(height, limit);
                     control.fe.Height = height;
                     dy = height - height2;
                     break;
@@ -252,7 +285,7 @@ namespace BuilderHMI.Lite
                     height = Math.Max(height, control.fe.MinHeight);
                     control.fe.Height = height;
                     dy = height - height2;
-                    top = Math.Min(top + dy, (int)(sizeCanvas.Height - control.fe.ActualHeight + 0.5));
+                    top = Math.Min(top + dy, Math.Round(sizeCanvas.Height - control.fe.ActualHeight));
                     break;
 
                 case VerticalAlignment.Bottom:
@@ -271,7 +304,14 @@ namespace BuilderHMI.Lite
                     dy = height2 - bottom;
                     break;
             }
+
             control.fe.Margin = new Thickness(left, top, right, bottom);
+            if (alignH != control.fe.HorizontalAlignment || alignV != control.fe.VerticalAlignment)
+            {
+                MainWindow.SetControlAlignment(control, sizeCanvas, alignH, alignV);
+                return true;
+            }
+            return false;
         }
 
         public static void Shift(FrameworkElement fe, double dx, double dy)

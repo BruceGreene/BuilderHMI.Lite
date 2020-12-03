@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Shapes;
 
 namespace BuilderHMI.Lite
@@ -40,6 +41,42 @@ namespace BuilderHMI.Lite
             rect2.SnapsToDevicePixels = true;
             Children.Add(rect2);
 
+            polyLeft = new Polygon();
+            polyLeft.Points = new PointCollection(new Point[] { new Point(0, 0), new Point(6, 3), new Point(6, -3) });
+            polyLeft.StrokeThickness = 0;
+            polyLeft.SetResourceReference(Shape.FillProperty, "SelectedBrush");
+            polyLeft.HorizontalAlignment = HorizontalAlignment.Left;
+            polyLeft.VerticalAlignment = VerticalAlignment.Center;
+            polyLeft.SnapsToDevicePixels = true;
+            Children.Add(polyLeft);
+
+            polyTop = new Polygon();
+            polyTop.Points = new PointCollection(new Point[] { new Point(0, 0), new Point(3, 6), new Point(-3, 6) });
+            polyTop.StrokeThickness = 0;
+            polyTop.SetResourceReference(Shape.FillProperty, "SelectedBrush");
+            polyTop.HorizontalAlignment = HorizontalAlignment.Center;
+            polyTop.VerticalAlignment = VerticalAlignment.Top;
+            polyTop.SnapsToDevicePixels = true;
+            Children.Add(polyTop);
+
+            polyRight = new Polygon();
+            polyRight.Points = new PointCollection(new Point[] { new Point(6, 0), new Point(0, 3), new Point(0, -3) });
+            polyRight.StrokeThickness = 0;
+            polyRight.SetResourceReference(Shape.FillProperty, "SelectedBrush");
+            polyRight.HorizontalAlignment = HorizontalAlignment.Right;
+            polyRight.VerticalAlignment = VerticalAlignment.Center;
+            polyRight.SnapsToDevicePixels = true;
+            Children.Add(polyRight);
+
+            polyBottom = new Polygon();
+            polyBottom.Points = new PointCollection(new Point[] { new Point(0, 6), new Point(3, 0), new Point(-3, 0) });
+            polyBottom.StrokeThickness = 0;
+            polyBottom.SetResourceReference(Shape.FillProperty, "SelectedBrush");
+            polyBottom.HorizontalAlignment = HorizontalAlignment.Center;
+            polyBottom.VerticalAlignment = VerticalAlignment.Bottom;
+            polyBottom.SnapsToDevicePixels = true;
+            Children.Add(polyBottom);
+
             vline = new Line();
             vline.Opacity = 0.4;
             vline.X1 = vline.Y1 = vline.X2 = vline.Y2 = 0;
@@ -69,6 +106,7 @@ namespace BuilderHMI.Lite
         private Grid gridCanvas;
         private IHmiControl control = null;
         private Rectangle border, rect1, rect2;
+        private Polygon polyLeft, polyTop, polyRight, polyBottom;
         private Line vline, vline2, hline, hline2;
         private SortedSet<double> vedges = new SortedSet<double>();
         private SortedSet<double> hedges = new SortedSet<double>();
@@ -164,6 +202,10 @@ namespace BuilderHMI.Lite
                     Height = control.fe.ActualHeight;
                     rect1.Visibility = Visibility.Visible;
                     rect2.Visibility = ((control.Flags & ECtrlFlags.Resize) > 0) ? Visibility.Visible : Visibility.Hidden;
+                    polyLeft.Visibility = (HorizontalAlignment == HorizontalAlignment.Left || HorizontalAlignment == HorizontalAlignment.Stretch) ? Visibility.Visible : Visibility.Hidden;
+                    polyTop.Visibility = (VerticalAlignment == VerticalAlignment.Top || VerticalAlignment == VerticalAlignment.Stretch) ? Visibility.Visible : Visibility.Hidden;
+                    polyRight.Visibility = (HorizontalAlignment == HorizontalAlignment.Right || HorizontalAlignment == HorizontalAlignment.Stretch) ? Visibility.Visible : Visibility.Hidden;
+                    polyBottom.Visibility = (VerticalAlignment == VerticalAlignment.Bottom || VerticalAlignment == VerticalAlignment.Stretch) ? Visibility.Visible : Visibility.Hidden;
                     control.fe.SizeChanged += OnControlSizeChanged;
                     Visibility = Visibility.Visible;
                 }
@@ -179,6 +221,10 @@ namespace BuilderHMI.Lite
             HorizontalAlignment = control.fe.HorizontalAlignment;
             VerticalAlignment = control.fe.VerticalAlignment;
             Margin = control.fe.Margin;
+            polyLeft.Visibility = (HorizontalAlignment == HorizontalAlignment.Left || HorizontalAlignment == HorizontalAlignment.Stretch) ? Visibility.Visible : Visibility.Hidden;
+            polyTop.Visibility = (VerticalAlignment == VerticalAlignment.Top || VerticalAlignment == VerticalAlignment.Stretch) ? Visibility.Visible : Visibility.Hidden;
+            polyRight.Visibility = (HorizontalAlignment == HorizontalAlignment.Right || HorizontalAlignment == HorizontalAlignment.Stretch) ? Visibility.Visible : Visibility.Hidden;
+            polyBottom.Visibility = (VerticalAlignment == VerticalAlignment.Bottom || VerticalAlignment == VerticalAlignment.Stretch) ? Visibility.Visible : Visibility.Hidden;
         }
 
         public void SetAlignmentMarks()

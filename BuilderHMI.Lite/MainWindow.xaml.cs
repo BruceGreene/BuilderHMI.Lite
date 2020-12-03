@@ -174,30 +174,23 @@ namespace BuilderHMI.Lite
         private void StartDragging(MouseEventArgs e)
         {
             e.Handled = true;  // prevent button clicks, etc
-            // Travel down the visual tree. Select the top IHmiControl but drag the control whose parent is the canvas-style Grid.
             draggingControl = null;
-            IHmiControl selectedCtrl = null;
-            FrameworkElement fe = null;
-            if (e.OriginalSource is FrameworkElement fe2)
-                fe = fe2;
 
-            while (fe != null && fe != this)
+            if (e.OriginalSource is FrameworkElement fe)
             {
-                FrameworkElement parent = VisualTreeHelper.GetParent(fe) as FrameworkElement;
-                if (fe is IHmiControl control)
+                while (fe != null && fe != gridCanvas)  // travel down the visual tree to the IHmiControl
                 {
-                    if (selectedCtrl == null)
-                        selectedCtrl = control;
-                    if (parent == gridCanvas)
+                    FrameworkElement parent = VisualTreeHelper.GetParent(fe) as FrameworkElement;
+                    if (fe is IHmiControl control)
                     {
                         draggingControl = control;
                         break;
                     }
+                    fe = parent;
                 }
-                fe = parent;
             }
 
-            SelectedControl = selectedCtrl;
+            SelectedControl = draggingControl;
 
             if (draggingControl != null)
             {
@@ -209,7 +202,7 @@ namespace BuilderHMI.Lite
                 }
 
                 leftButtonPressed = (e.LeftButton == MouseButtonState.Pressed);
-                location0.Initialize(draggingControl, e.GetPosition(this));
+                location0.Initialize(draggingControl, e.GetPosition(gridCanvas));
                 CaptureMouse();
 
                 if (leftButtonPressed && (draggingControl.Flags & ECtrlFlags.IsGroup) > 0 &&
@@ -228,12 +221,27 @@ namespace BuilderHMI.Lite
         private void DoDragging(MouseEventArgs e)
         {
             e.Handled = true;
-            Vector mouseDelta = e.GetPosition(this) - location0.mouse;
-            double dx = mouseDelta.X, dy = mouseDelta.Y;
+            Point mouse = e.GetPosition(gridCanvas);
+            double dx = mouse.X - location0.mouse.X, dy = mouse.Y - location0.mouse.Y;
+            Size sizeCanvas = gridCanvas.RenderSize;
             if (leftButtonPressed)  // move
             {
-                location0.Move(gridCanvas.RenderSize, ref dx, ref dy);
-                if (dx != 0 || dy != 0)
+                if (location0.Move(sizeCanvas, ref dx, ref dy))
+                {
+                    location0.Initialize(location0.control, mouse);  // alignment changed
+                    foreach (var item in moveList)
+                    {
+                        var alignH = item.control.fe.HorizontalAlignment;
+                        var alignV = item.control.fe.VerticalAlignment;
+                        if (location0.control.fe.HorizontalAlignment != HorizontalAlignment.Stretch)
+                            alignH = location0.control.fe.HorizontalAlignment;
+                        if (location0.control.fe.VerticalAlignment != VerticalAlignment.Stretch)
+                            alignV = location0.control.fe.VerticalAlignment;
+                        SetControlAlignment(item.control, sizeCanvas, alignH, alignV);
+                        item.Initialize(item.control, mouse);
+                    }
+                }
+                else if (dx != 0 || dy != 0)
                 {
                     foreach (var item in moveList)
                         item.MoveSimple(dx, dy);
@@ -241,13 +249,14 @@ namespace BuilderHMI.Lite
             }
             else  // size
             {
-                location0.Size(gridCanvas.RenderSize, ref dx, ref dy);
+                if (location0.Size(sizeCanvas, ref dx, ref dy))
+                    location0.Initialize(location0.control, mouse);  // alignment changed
             }
 
-            if (SelectedControl == draggingControl && (dx != 0 || dy != 0))
+            if (dx != 0 || dy != 0)
             {
                 marker.Dragging = leftButtonPressed ? Marker.EDragging.Move : Marker.EDragging.Size;
-                marker.Margin = draggingControl.fe.Margin;
+                marker.SetAlignment();
                 marker.SetAlignmentMarks();
                 designer.UpdateLocation();
             }
@@ -257,6 +266,33 @@ namespace BuilderHMI.Lite
         {
             if (draggingControl != null)
             {
+                if ((draggingControl.Flags & ECtrlFlags.IsGroup) > 0)  // bring controls to front if under group control
+                {
+                    var sortedChildren = new SortedList<int, IHmiControl>(gridCanvas.Children.Count);
+                    foreach (object child in gridCanvas.Children)
+                    {
+                        if (child is IHmiControl control && IsUnder(control, draggingControl))
+                            sortedChildren[Panel.GetZIndex(control.fe)] = control;
+                    }
+
+                    if (sortedChildren.Count > 0)
+                    {
+                        foreach (IHmiControl control in sortedChildren.Values)
+                            Panel.SetZIndex(control.fe, zindexTop++);
+                    }
+                }
+                else  // bring dragging control to front if under a group control
+                {
+                    foreach (object child in gridCanvas.Children)
+                    {
+                        if (child is IGroupHmiControl control && IsUnder(draggingControl, control))
+                        {
+                            Panel.SetZIndex(draggingControl.fe, zindexTop++);
+                            break;
+                        }
+                    }
+                }
+
                 marker.Dragging = Marker.EDragging.None;
                 draggingControl = null;
                 location0.Clear();
@@ -312,6 +348,21 @@ namespace BuilderHMI.Lite
         private static bool IsInside(IHmiControl controlInner, IHmiControl controlOuter)
         {
             if (controlInner == controlOuter || Panel.GetZIndex(controlInner.fe) < Panel.GetZIndex(controlOuter.fe))
+                return false;
+
+            Size size = controlInner.fe.RenderSize;
+            Point leftTopInner = GetLeftTop(controlInner);
+            Point leftTopOuter = GetLeftTop(controlOuter);
+            if (leftTopInner.X < leftTopOuter.X || leftTopInner.Y < leftTopOuter.Y) return false;
+            if ((leftTopInner.X + size.Width) > (leftTopOuter.X + controlOuter.fe.ActualWidth)) return false;
+            if ((leftTopInner.Y + size.Height) > (leftTopOuter.Y + controlOuter.fe.ActualHeight)) return false;
+
+            return true;
+        }
+
+        private static bool IsUnder(IHmiControl controlInner, IHmiControl controlOuter)
+        {
+            if (controlInner == controlOuter || Panel.GetZIndex(controlInner.fe) > Panel.GetZIndex(controlOuter.fe))
                 return false;
 
             Size size = controlInner.fe.RenderSize;
@@ -477,6 +528,7 @@ namespace BuilderHMI.Lite
             Panel.SetZIndex(control.fe, zindexTop++);
             Location0.Shift(control.fe, leftShift, topShift);
             gridCanvas.Children.Add(control.fe);
+            ((System.Windows.Media.Animation.Storyboard)FindResource("fadeIn")).Begin(control.fe);
         }
 
         private Dictionary<string, IHmiControl> childrenByName = new Dictionary<string, IHmiControl>();
@@ -552,28 +604,34 @@ namespace BuilderHMI.Lite
                 return;
             }
 
-            IHmiControl control = SelectedControl;
+            SetControlAlignment(SelectedControl, gridCanvas.RenderSize, alignH, alignV);
+            marker.SetAlignment();
+            designer.UpdateLocation();
+            UpdateXamlWindow();
+        }
+
+        public static void SetControlAlignment(IHmiControl control, Size sizeCanvas, HorizontalAlignment alignH, VerticalAlignment alignV)
+        {
             Thickness margin = control.fe.Margin;
             Size size = control.fe.RenderSize;
-            Size sizeGrid = gridCanvas.RenderSize;
 
             if (alignH == HorizontalAlignment.Left && control.fe.HorizontalAlignment != HorizontalAlignment.Left)
             {
                 if (control.fe.HorizontalAlignment == HorizontalAlignment.Center)
                 {
-                    double x2 = (sizeGrid.Width - size.Width - margin.Left) / 2;
+                    double x2 = (sizeCanvas.Width - size.Width - margin.Left) / 2;
                     double left = margin.Left + x2 + 0.5;
                     control.fe.Margin = new Thickness((int)left, margin.Top, 0, margin.Bottom);
                 }
                 else if (control.fe.HorizontalAlignment == HorizontalAlignment.Right)
                 {
-                    double left = sizeGrid.Width - size.Width - margin.Right + 0.5;
+                    double left = sizeCanvas.Width - size.Width - margin.Right + 0.5;
                     control.fe.Margin = new Thickness((int)left, margin.Top, 0, margin.Bottom);
                 }
                 else if (control.fe.HorizontalAlignment == HorizontalAlignment.Stretch)
                 {
                     control.fe.Margin = new Thickness(margin.Left, margin.Top, 0, margin.Bottom);
-                    control.fe.Width = (int)(sizeGrid.Width - margin.Left - margin.Right + 0.5);
+                    control.fe.Width = (int)(sizeCanvas.Width - margin.Left - margin.Right + 0.5);
                 }
                 control.fe.HorizontalAlignment = HorizontalAlignment.Left;
             }
@@ -582,13 +640,13 @@ namespace BuilderHMI.Lite
                 if (control.fe.HorizontalAlignment == HorizontalAlignment.Left)
                 {
                     double x1 = margin.Left;
-                    double x2 = sizeGrid.Width - size.Width - margin.Left;
+                    double x2 = sizeCanvas.Width - size.Width - margin.Left;
                     double left = x1 - x2 + 0.5;
                     control.fe.Margin = new Thickness((int)left, margin.Top, 0, margin.Bottom);
                 }
                 else if (control.fe.HorizontalAlignment == HorizontalAlignment.Right)
                 {
-                    double x1 = sizeGrid.Width - size.Width - margin.Right;
+                    double x1 = sizeCanvas.Width - size.Width - margin.Right;
                     double x2 = margin.Right;
                     double left = x1 - x2 + 0.5;
                     control.fe.Margin = new Thickness((int)left, margin.Top, 0, margin.Bottom);
@@ -599,7 +657,7 @@ namespace BuilderHMI.Lite
                     double x2 = margin.Right;
                     double left = x1 - x2 + 0.5;
                     control.fe.Margin = new Thickness((int)left, margin.Top, 0, margin.Bottom);
-                    control.fe.Width = (int)(sizeGrid.Width - margin.Left - margin.Right + 0.5);
+                    control.fe.Width = (int)(sizeCanvas.Width - margin.Left - margin.Right + 0.5);
                 }
                 control.fe.HorizontalAlignment = HorizontalAlignment.Center;
             }
@@ -607,19 +665,19 @@ namespace BuilderHMI.Lite
             {
                 if (control.fe.HorizontalAlignment == HorizontalAlignment.Left)
                 {
-                    double right = sizeGrid.Width - size.Width - margin.Left + 0.5;
+                    double right = sizeCanvas.Width - size.Width - margin.Left + 0.5;
                     control.fe.Margin = new Thickness(0, margin.Top, (int)right, margin.Bottom);
                 }
                 else if (control.fe.HorizontalAlignment == HorizontalAlignment.Center)
                 {
-                    double x2 = (sizeGrid.Width - size.Width - margin.Left) / 2;
+                    double x2 = (sizeCanvas.Width - size.Width - margin.Left) / 2;
                     double right = x2 + 0.5;
                     control.fe.Margin = new Thickness(0, margin.Top, (int)right, margin.Bottom);
                 }
                 else if (control.fe.HorizontalAlignment == HorizontalAlignment.Stretch)
                 {
                     control.fe.Margin = new Thickness(0, margin.Top, margin.Right, margin.Bottom);
-                    control.fe.Width = (int)(sizeGrid.Width - margin.Left - margin.Right + 0.5);
+                    control.fe.Width = (int)(sizeCanvas.Width - margin.Left - margin.Right + 0.5);
                 }
                 control.fe.HorizontalAlignment = HorizontalAlignment.Right;
             }
@@ -627,19 +685,19 @@ namespace BuilderHMI.Lite
             {
                 if (control.fe.HorizontalAlignment == HorizontalAlignment.Left)
                 {
-                    double right = sizeGrid.Width - size.Width - margin.Left + 0.5;
+                    double right = sizeCanvas.Width - size.Width - margin.Left + 0.5;
                     control.fe.Margin = new Thickness(margin.Left, margin.Top, (int)right, margin.Bottom);
                 }
                 else if (control.fe.HorizontalAlignment == HorizontalAlignment.Center)
                 {
-                    double x2 = (sizeGrid.Width - size.Width - margin.Left) / 2;
+                    double x2 = (sizeCanvas.Width - size.Width - margin.Left) / 2;
                     double left = margin.Left + x2 + 0.5;
                     double right = x2 + 0.5;
                     control.fe.Margin = new Thickness((int)left, margin.Top, (int)right, margin.Bottom);
                 }
                 else if (control.fe.HorizontalAlignment == HorizontalAlignment.Right)
                 {
-                    double left = sizeGrid.Width - size.Width - margin.Right + 0.5;
+                    double left = sizeCanvas.Width - size.Width - margin.Right + 0.5;
                     control.fe.Margin = new Thickness((int)left, margin.Top, margin.Right, margin.Bottom);
                 }
                 control.fe.Width = double.NaN;
@@ -650,19 +708,19 @@ namespace BuilderHMI.Lite
             {
                 if (control.fe.VerticalAlignment == VerticalAlignment.Center)
                 {
-                    double y2 = (sizeGrid.Height - size.Height - margin.Top) / 2;
+                    double y2 = (sizeCanvas.Height - size.Height - margin.Top) / 2;
                     double top = margin.Top + y2 + 0.5;
                     control.fe.Margin = new Thickness(margin.Left, (int)top, margin.Right, 0);
                 }
                 else if (control.fe.VerticalAlignment == VerticalAlignment.Bottom)
                 {
-                    double top = sizeGrid.Height - size.Height - margin.Bottom + 0.5;
+                    double top = sizeCanvas.Height - size.Height - margin.Bottom + 0.5;
                     control.fe.Margin = new Thickness(margin.Left, (int)top, margin.Right, 0);
                 }
                 else if (control.fe.VerticalAlignment == VerticalAlignment.Stretch)
                 {
                     control.fe.Margin = new Thickness(margin.Left, margin.Top, margin.Right, 0);
-                    control.fe.Height = (int)(sizeGrid.Height - margin.Top - margin.Bottom + 0.5);
+                    control.fe.Height = (int)(sizeCanvas.Height - margin.Top - margin.Bottom + 0.5);
                 }
                 control.fe.VerticalAlignment = VerticalAlignment.Top;
             }
@@ -671,13 +729,13 @@ namespace BuilderHMI.Lite
                 if (control.fe.VerticalAlignment == VerticalAlignment.Top)
                 {
                     double y1 = margin.Top;
-                    double y2 = sizeGrid.Height - size.Height - margin.Top;
+                    double y2 = sizeCanvas.Height - size.Height - margin.Top;
                     double top = y1 - y2 + 0.5;
                     control.fe.Margin = new Thickness(margin.Left, (int)top, margin.Right, 0);
                 }
                 else if (control.fe.VerticalAlignment == VerticalAlignment.Bottom)
                 {
-                    double y1 = sizeGrid.Height - size.Height - margin.Bottom;
+                    double y1 = sizeCanvas.Height - size.Height - margin.Bottom;
                     double y2 = margin.Bottom;
                     double top = y1 - y2 + 0.5;
                     control.fe.Margin = new Thickness(margin.Left, (int)top, margin.Right, 0);
@@ -688,7 +746,7 @@ namespace BuilderHMI.Lite
                     double y2 = margin.Bottom;
                     double top = y1 - y2 + 0.5;
                     control.fe.Margin = new Thickness(margin.Left, (int)top, margin.Right, 0);
-                    control.fe.Height = (int)(sizeGrid.Height - margin.Top - margin.Bottom + 0.5);
+                    control.fe.Height = (int)(sizeCanvas.Height - margin.Top - margin.Bottom + 0.5);
                 }
                 control.fe.VerticalAlignment = VerticalAlignment.Center;
             }
@@ -696,19 +754,19 @@ namespace BuilderHMI.Lite
             {
                 if (control.fe.VerticalAlignment == VerticalAlignment.Top)
                 {
-                    double bottom = sizeGrid.Height - size.Height - margin.Top + 0.5;
+                    double bottom = sizeCanvas.Height - size.Height - margin.Top + 0.5;
                     control.fe.Margin = new Thickness(margin.Left, 0, margin.Right, (int)bottom);
                 }
                 else if (control.fe.VerticalAlignment == VerticalAlignment.Center)
                 {
-                    double y2 = (sizeGrid.Height - size.Height - margin.Top) / 2;
+                    double y2 = (sizeCanvas.Height - size.Height - margin.Top) / 2;
                     double bottom = y2 + 0.5;
                     control.fe.Margin = new Thickness(margin.Left, 0, margin.Right, (int)bottom);
                 }
                 else if (control.fe.VerticalAlignment == VerticalAlignment.Stretch)
                 {
                     control.fe.Margin = new Thickness(margin.Left, 0, margin.Right, margin.Bottom);
-                    control.fe.Height = (int)(sizeGrid.Height - margin.Top - margin.Bottom + 0.5);
+                    control.fe.Height = (int)(sizeCanvas.Height - margin.Top - margin.Bottom + 0.5);
                 }
                 control.fe.VerticalAlignment = VerticalAlignment.Bottom;
             }
@@ -716,28 +774,24 @@ namespace BuilderHMI.Lite
             {
                 if (control.fe.VerticalAlignment == VerticalAlignment.Top)
                 {
-                    double bottom = sizeGrid.Height - size.Height - margin.Top + 0.5;
+                    double bottom = sizeCanvas.Height - size.Height - margin.Top + 0.5;
                     control.fe.Margin = new Thickness(margin.Left, margin.Top, margin.Right, (int)bottom);
                 }
                 else if (control.fe.VerticalAlignment == VerticalAlignment.Center)
                 {
-                    double y2 = (sizeGrid.Height - size.Height - margin.Top) / 2;
+                    double y2 = (sizeCanvas.Height - size.Height - margin.Top) / 2;
                     double top = margin.Top + y2 + 0.5;
                     double bottom = y2 + 0.5;
                     control.fe.Margin = new Thickness(margin.Left, (int)top, margin.Right, (int)bottom);
                 }
                 else if (control.fe.VerticalAlignment == VerticalAlignment.Bottom)
                 {
-                    double top = sizeGrid.Height - size.Height - margin.Bottom + 0.5;
+                    double top = sizeCanvas.Height - size.Height - margin.Bottom + 0.5;
                     control.fe.Margin = new Thickness(margin.Left, (int)top, margin.Right, margin.Bottom);
                 }
                 control.fe.Height = double.NaN;
                 control.fe.VerticalAlignment = VerticalAlignment.Stretch;
             }
-
-            marker.SetAlignment();
-            designer.UpdateLocation();
-            UpdateXamlWindow();
         }
 
         public void SelectedControlToFront()
