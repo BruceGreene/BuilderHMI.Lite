@@ -223,7 +223,17 @@ namespace BuilderHMI.Lite
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
-            Orientation = (Height > Width) ? Orientation.Vertical : Orientation.Horizontal;
+            Orientation = IsVertical ? Orientation.Vertical : Orientation.Horizontal;
+        }
+
+        private bool IsVertical
+        {
+            get
+            {
+                if (double.IsNaN(Width)) return false;
+                if (double.IsNaN(Height)) return true;
+                return (Height > Width);
+            }
         }
 
         public FrameworkElement fe { get { return this; } }
@@ -242,8 +252,7 @@ namespace BuilderHMI.Lite
             for (int i = 0; i < indentLevel; i++) sb.Append("    ");
             sb.Append(vs ? "<Slider Style=\"{DynamicResource SliderStyle}\"" : "<HmiSlider");
             sb.AppendFormat(" Name=\"{0}\" Minimum=\"{1}\" Maximum=\"{2}\"", Name, Minimum, Maximum);
-            if (vs && Height > Width)
-                sb.Append(" Orientation=\"Vertical\"");
+            if (vs && IsVertical) sb.Append(" Orientation=\"Vertical\"");
             if (eventHandlers)
                 sb.AppendFormat(" ValueChanged=\"{0}{1}_ValueChanged\"", char.ToUpper(Name[0]), Name.Substring(1));
             OwnerPage.AppendLocationXaml(this, sb);
