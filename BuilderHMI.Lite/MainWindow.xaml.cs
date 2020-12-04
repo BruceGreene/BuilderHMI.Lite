@@ -30,6 +30,7 @@ namespace BuilderHMI.Lite
         private IHmiControl draggingControl = null, selectedControl = null;
         private Location0 location0 = new Location0();
         private List<Location0> moveList = new List<Location0>();  // children that move with parent
+        private double Top0 = 0, Left0 = 0;
 
         public MainWindow()
         {
@@ -52,6 +53,18 @@ namespace BuilderHMI.Lite
         {
             designer.Owner = xamlWindow.Owner = this;
             designer.Show();
+        }
+
+        private void Window_LocationChanged(object sender, EventArgs e)
+        {
+            if (designer.Top > Top0 && designer.Top < Top0 + Height && designer.Left > Left0 && designer.Left < Left0 + Width)
+            {
+                designer.Top += Top - Top0;  // Move Designer window if upper-left corner is within the main window
+                designer.Left += Left - Left0;
+            }
+
+            Top0 = Top;
+            Left0 = Left;
         }
 
         public void OnKeyDown(object sender, KeyEventArgs e)
