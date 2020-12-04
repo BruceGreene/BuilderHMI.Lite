@@ -251,6 +251,9 @@
   <ItemGroup>
     <Resource Include="Images\control_tree.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\delete_all.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(ProjectDir)App.config" "$(TargetDir)\Visual Studio\Template" /D /y

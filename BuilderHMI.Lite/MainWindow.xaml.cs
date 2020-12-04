@@ -896,6 +896,17 @@ namespace BuilderHMI.Lite
             UpdateXamlWindow();
         }
 
+        public void DeleteAllControls()
+        {
+            if (MessageBox.Show(this, "Are you sure you want to Delete All Controls?", "BuilderHMI.Lite", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                SelectedControl = null;
+                gridCanvas.Children.Clear();
+                zindexTop = zindexBottom = BASE_ZINDEX;
+                UpdateXamlWindow();
+            }
+        }
+
         public void CopySelectedControl()
         {
             if (SelectedControl == null)

@@ -99,6 +99,7 @@ namespace BuilderHMI.Lite
                 case "btnDelete": mainWindow.DeleteSelectedControl(); break;
                 case "btnToFront": mainWindow.SelectedControlToFront(); break;
                 case "btnToBack": mainWindow.SelectedControlToBack(); break;
+                case "btnDeleteAll": mainWindow.DeleteAllControls(); break;
 
                 case "btnGenerateDotNetFrameworkProject":
                     mainWindow.GenerateDotNetFrameworkProject(tbProjectName.Text, tbTitle.Text, cbEventHandlers.IsChecked == true, cbOpenInVS.IsChecked == true);

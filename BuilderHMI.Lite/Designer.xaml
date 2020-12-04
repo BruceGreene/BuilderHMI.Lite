@@ -172,6 +172,12 @@
                             <TextBlock Text="Tree View" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
                         </StackPanel>
                     </Button>
+                    <Button Name="btnDeleteAll" HorizontalAlignment="Left" Margin="0,30,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="Images/delete_all.png" Height="24" Stretch="None" />
+                            <TextBlock Text="Delete All" Margin="8,0,0,0" Foreground="{DynamicResource TextBrush2}" />
+                        </StackPanel>
+                    </Button>
                 </WrapPanel>
             </Grid>
 
